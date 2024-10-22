@@ -17,7 +17,6 @@ class CustomModel(torch.nn.Module):
         sr = self.sr_model(x)
         return self.hard_constraint(x, sr)
 
-
 def get_model_name(
     model_type: Literal["SR", "Fusionx2", "Fusionx4"],
     model_name: Literal["cnn", "swin", "mamba"] = "cnn",
@@ -37,7 +36,9 @@ def get_model_name(
     model = "%s__%s__%s__%s" % (model_type, model_name, model_size, model_loss)
     model_fullpath = weights_path / (model + ".pth")
     if not model_fullpath.exists():
-        raise FileNotFoundError("%s: Model not found" % model_fullpath)
+        download_weights(model_fullpath)
+    
+    print(f"Weights [{model_type}]: '{model_fullpath}'")
 
     return model_fullpath
 
@@ -136,10 +137,6 @@ def load_fusionx2_model(
         weights_path=weights_path,
     )
 
-    # If the files does not exist, download them
-    if not model_snippet.exists():
-        download_weights(model_snippet)
-
     # Load the weights
     weights_data = torch.load(model_snippet, map_location=torch.device("cpu"))
 
@@ -194,10 +191,6 @@ def load_fusionx4_model(
         weights_path=weights_path,
     )
 
-    # If the files does not exist, download them
-    if not model_snippet.exists():
-        download_weights(model_snippet)
-
     # Load the weights
     weights_data = torch.load(model_snippet, map_location=torch.device("cpu"))
 
@@ -251,10 +244,6 @@ def load_srx4_model(
         model_loss=model_loss,
         weights_path=weights_path,
     )
-
-    # If the files does not exist, download them
-    if not model_snippet.exists():
-        download_weights(model_snippet)
 
     # Load the weights
     weights_data = torch.load(model_snippet, map_location=torch.device("cpu"))
