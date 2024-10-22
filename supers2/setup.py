@@ -97,6 +97,7 @@ def load_model_parameters(model_name: str, model_size: str):
 def load_model(model_name: str, model_params: dict):
     # Diccionario que mapea nombres de modelo a sus respectivos módulos y clases
     model_mapping = {
+        "cnn_legacy": ("supers2.models.cnn_legacy", "CNNSR_legacy"),
         "cnn": ("supers2.models.cnn", "CNNSR"),
         "swin": ("supers2.models.swin", "Swin2SR"),
         "mamba": ("supers2.models.mamba", "MambaSR"),
@@ -144,6 +145,10 @@ def load_fusionx2_model(
 
     # Load the model parameters
     model_params = load_model_parameters(model_name, model_size)
+
+    # If model name is CNN change to CNN_legacy
+    if model_name == "cnn":
+        model_name = "cnn_legacy"
 
     # Load the model
     FusionX2 = load_model(model_name, model_params)
@@ -194,6 +199,10 @@ def load_fusionx4_model(
 
     # Load the model parameters
     model_params = load_model_parameters(model_name, model_size)
+
+    # If model name is CNN change to CNN_legacy
+    if model_name == "cnn":
+        model_name = "cnn_legacy"
 
     # Load the model
     FusionX4 = load_model(model_name, model_params)
