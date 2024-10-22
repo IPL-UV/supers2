@@ -4,6 +4,7 @@
 
 
 from collections import OrderedDict
+from typing import List, Optional
 
 import torch
 import torch.nn.functional as F
@@ -133,10 +134,17 @@ class Conv3XC(nn.Module):
             ),
         )
 
-        # self.eval_conv = nn.Conv2d(in_channels=c_in, out_channels=c_out, kernel_size=3, padding=1, stride=s, bias=bias)
-        # self.eval_conv.weight.requires_grad = False
-        # self.eval_conv.bias.requires_grad = False
-        # self.update_params()
+        self.eval_conv = nn.Conv2d(
+            in_channels=c_in,
+            out_channels=c_out,
+            kernel_size=3,
+            padding=1,
+            stride=s,
+            bias=bias,
+        )
+        self.eval_conv.weight.requires_grad = False
+        self.eval_conv.bias.requires_grad = False
+        self.update_params()
 
     def update_params(self):
         w1 = self.conv[0].weight.data.clone().detach()
@@ -277,7 +285,7 @@ class CNNSR(nn.Module):
             feature_channels, out_channels, upscale_factor=upscale
         )
 
-    def forward(self, x: torch.Tensor, save_attentions: list = [0]):
+    def forward(self, x: torch.Tensor, save_attentions: Optional[List[int]] = None):
         # Initial Convolution
         out_feature = self.conv_1(x)
 
@@ -295,7 +303,7 @@ class CNNSR(nn.Module):
                 out_blast = out2
 
             # Save attention if needed
-            if index in save_attentions:
+            if save_attentions is not None and index in save_attentions:
                 attentions.append(att)
 
         # Final Convolution and concatenation
@@ -305,4 +313,6 @@ class CNNSR(nn.Module):
         # Upsample
         output = self.upsampler(out)
 
+        if save_attentions is not None:
+            return output, attentions
         return output
