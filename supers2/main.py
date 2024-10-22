@@ -61,6 +61,12 @@ def setmodel(
             - "FusionX4": Loaded Fusion X4 model (or None if not used).
             - "SR": Loaded super-resolution model (or None if not used).
     """
+    # If weights_path is None, we create a folder in the .config directory
+    if weights_path is None:
+        import pathlib
+        weights_path = pathlib.Path(".config/supers2")
+        weights_path.mkdir(parents=True, exist_ok=True)
+
 
     # If the resolution is 10m we only run the FusionX2 model that 
     # converts 20m bands to 10m

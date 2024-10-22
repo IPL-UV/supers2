@@ -5,6 +5,7 @@ from typing import Literal, Union
 import torch
 
 from supers2.models.tricks import CNNHardConstraint
+from supers2.download import download_weights
 
 class CustomModel(torch.nn.Module):
     def __init__(self, SRmodel: torch.nn.Module, HardConstraint: torch.nn.Module):
@@ -135,6 +136,10 @@ def load_fusionx2_model(
         weights_path=weights_path,
     )
 
+    # If the files does not exist, download them
+    if not model_snippet.exists():
+        download_weights(model_snippet)
+
     # Load the weights
     weights_data = torch.load(model_snippet, map_location=torch.device("cpu"))
 
@@ -189,6 +194,10 @@ def load_fusionx4_model(
         weights_path=weights_path,
     )
 
+    # If the files does not exist, download them
+    if not model_snippet.exists():
+        download_weights(model_snippet)
+
     # Load the weights
     weights_data = torch.load(model_snippet, map_location=torch.device("cpu"))
 
@@ -242,6 +251,10 @@ def load_srx4_model(
         model_loss=model_loss,
         weights_path=weights_path,
     )
+
+    # If the files does not exist, download them
+    if not model_snippet.exists():
+        download_weights(model_snippet)
 
     # Load the weights
     weights_data = torch.load(model_snippet, map_location=torch.device("cpu"))
