@@ -1,6 +1,6 @@
 import math
 from functools import partial
-from typing import Callable
+from typing import Callable, Optional
 
 import torch
 import torch.nn as nn
@@ -17,15 +17,19 @@ except ImportError:
         "Please install the mamba_ssm package before using MambaSR model."
     )
 
-
 class ChannelAttention(nn.Module):
-    """Channel attention used in RCAN.
-    Args:
-        num_feat (int): Channel number of intermediate features.
-        squeeze_factor (int): Channel squeeze factor. Default: 16.
     """
+    Implements channel-wise attention mechanism to recalibrate feature responses.
 
-    def __init__(self, num_feat, squeeze_factor=16):
+    Args:
+        num_feat (int): Number of input feature channels.
+        squeeze_factor (int, optional): Factor by which the feature channels are reduced in the squeeze operation. Default is 16.
+    """
+    def __init__(
+        self, 
+        num_feat, 
+        squeeze_factor=16
+    ):
         super(ChannelAttention, self).__init__()
         self.attention = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
@@ -35,14 +39,38 @@ class ChannelAttention(nn.Module):
             nn.Sigmoid(),
         )
 
-    def forward(self, x):
+    def forward(
+        self, 
+        x: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Forward pass of the channel attention mechanism.
+
+        Args:
+            x (torch.Tensor): Input feature map of shape (B, C, H, W), where B is batch size, C is number of channels, H is height, and W is width.
+
+        Returns:
+            torch.Tensor: Output feature map with recalibrated channel responses, same shape as input.
+        """
         y = self.attention(x)
         return x * y
 
-
 class CAB(nn.Module):
+    """
+    Convolutional Attention Block (CAB) that combines convolution layers and channel attention for feature enhancement.
+
+    Args:
+        num_feat (int): Number of input feature channels.
+        is_light_sr (bool, optional): If True, applies a higher compression ratio for lightweight super-resolution models. Default is False.
+        compress_ratio (int, optional): Compression ratio for reducing channels in the convolution layers. Default is 3.
+        squeeze_factor (int, optional): Factor used in the channel attention for squeezing feature maps. Default is 30.
+    """
     def __init__(
-        self, num_feat, is_light_sr=False, compress_ratio=3, squeeze_factor=30
+        self, 
+        num_feat, 
+        is_light_sr=False, 
+        compress_ratio=3, 
+        squeeze_factor=30
     ):
         super(CAB, self).__init__()
         if is_light_sr:  # a larger compression ratio is used for light-SR
@@ -54,11 +82,32 @@ class CAB(nn.Module):
             ChannelAttention(num_feat, squeeze_factor),
         )
 
-    def forward(self, x):
+    def forward(
+        self, 
+        x: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Forward pass of the CAB.
+
+        Args:
+            x (torch.Tensor): Input feature map of shape (B, C, H, W).
+
+        Returns:
+            torch.Tensor: Enhanced feature map after convolution and attention, with the same shape as input.
+        """
         return self.cab(x)
 
-
 class Mlp(nn.Module):
+    """
+    Multi-layer perceptron used for transforming feature representations in transformer models.
+
+    Args:
+        in_features (int): Number of input features.
+        hidden_features (int, optional): Number of hidden layer features. Default is in_features.
+        out_features (int, optional): Number of output features. Default is in_features.
+        act_layer (nn.Module, optional): Activation function applied after the first fully connected layer. Default is GELU.
+        drop (float, optional): Dropout rate applied after the activation and second fully connected layer. Default is 0.0.
+    """
     def __init__(
         self,
         in_features,
@@ -75,7 +124,19 @@ class Mlp(nn.Module):
         self.fc2 = nn.Linear(hidden_features, out_features)
         self.drop = nn.Dropout(drop)
 
-    def forward(self, x):
+    def forward(
+        self, 
+        x: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Forward pass of the MLP.
+
+        Args:
+            x (torch.Tensor): Input tensor of shape (B, N, C), where B is batch size, N is sequence length, and C is number of channels.
+
+        Returns:
+            torch.Tensor: Output tensor with transformed feature representations, same shape as input.
+        """
         x = self.fc1(x)
         x = self.act(x)
         x = self.drop(x)
@@ -85,6 +146,13 @@ class Mlp(nn.Module):
 
 
 class DynamicPosBias(nn.Module):
+    """
+    Dynamic positional bias generator for adding spatial positional encoding in attention mechanisms.
+
+    Args:
+        dim (int): Number of input channels.
+        num_heads (int): Number of attention heads.
+    """
     def __init__(self, dim, num_heads):
         super().__init__()
         self.num_heads = num_heads
@@ -106,11 +174,35 @@ class DynamicPosBias(nn.Module):
             nn.Linear(self.pos_dim, self.num_heads),
         )
 
-    def forward(self, biases):
+    def forward(
+        self, 
+        biases: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Forward pass to compute positional biases.
+
+        Args:
+            biases (torch.Tensor): Input tensor representing spatial biases of shape (2,).
+
+        Returns:
+            torch.Tensor: Output tensor with dynamically generated positional biases for attention heads.
+        """
         pos = self.pos3(self.pos2(self.pos1(self.pos_proj(biases))))
         return pos
 
-    def flops(self, N):
+    def flops(
+        self, 
+        N: int
+    ) -> int:
+        """
+        Calculate the number of floating point operations (FLOPs) required by the positional bias mechanism.
+
+        Args:
+            N (int): Number of tokens (e.g., the product of height and width of the feature map).
+
+        Returns:
+            int: Total number of FLOPs required for the positional bias computations.
+        """
         flops = N * 2 * self.pos_dim
         flops += N * self.pos_dim * self.pos_dim
         flops += N * self.pos_dim * self.pos_dim
@@ -119,17 +211,18 @@ class DynamicPosBias(nn.Module):
 
 
 class Attention(nn.Module):
-    r"""Multi-head self attention module with dynamic position bias.
+    """
+    Multi-head self-attention with dynamic positional bias for transformer models.
 
     Args:
         dim (int): Number of input channels.
         num_heads (int): Number of attention heads.
-        qkv_bias (bool, optional):  If True, add a learnable bias to query, key, value. Default: True
-        qk_scale (float | None, optional): Override default qk scale of head_dim ** -0.5 if set
-        attn_drop (float, optional): Dropout ratio of attention weight. Default: 0.0
-        proj_drop (float, optional): Dropout ratio of output. Default: 0.0
+        qkv_bias (bool, optional): Whether to include bias in query, key, and value projections. Default is True.
+        qk_scale (float, optional): Custom scale factor for query-key dot product. Default is None (uses head_dim**-0.5).
+        attn_drop (float, optional): Dropout rate for attention weights. Default is 0.0.
+        proj_drop (float, optional): Dropout rate for output projection. Default is 0.0.
+        position_bias (bool, optional): Whether to include dynamic positional bias in the attention mechanism. Default is True.
     """
-
     def __init__(
         self,
         dim,
@@ -156,13 +249,24 @@ class Attention(nn.Module):
 
         self.softmax = nn.Softmax(dim=-1)
 
-    def forward(self, x, H, W, mask=None):
+    def forward(
+        self, 
+        x: torch.Tensor, 
+        H: int, 
+        W: int, 
+        mask: Optional[torch.Tensor] = None
+    ) -> torch.Tensor:
         """
+        Forward pass of the multi-head attention mechanism.
+
         Args:
-            x: input features with shape of (num_groups*B, N, C)
-            mask: (0/-inf) mask with shape of (num_groups, Gh*Gw, Gh*Gw) or None
-            H: height of each group
-            W: width of each group
+            x (torch.Tensor): Input tensor of shape (B, N, C), where B is batch size, N is number of tokens (H*W), and C is number of channels.
+            H (int): Height of the feature map.
+            W (int): Width of the feature map.
+            mask (Optional[torch.Tensor]): Optional mask for blocking certain attention connections. Default is None.
+
+        Returns:
+            torch.Tensor: Output tensor after applying attention mechanism, same shape as input.
         """
         group_size = (H, W)
         B_, N, C = x.shape
@@ -240,6 +344,26 @@ class Attention(nn.Module):
 
 
 class SS2D(nn.Module):
+    """
+    Implements the 2D state-space model for attention mechanisms, incorporating convolutions and learned dynamic projections.
+
+    Args:
+        d_model (int): Dimension of the input model.
+        d_state (int, optional): Number of states in the state-space model. Default is 16.
+        d_conv (int, optional): Convolution kernel size. Default is 3.
+        expand (float, optional): Expansion factor for the inner dimensions. Default is 2.0.
+        dt_rank (str or int, optional): Rank of the time-step projection. If "auto", it is determined based on d_model. Default is "auto".
+        dt_min (float, optional): Minimum value for the time-step bias initialization. Default is 0.001.
+        dt_max (float, optional): Maximum value for the time-step bias initialization. Default is 0.1.
+        dt_init (str, optional): Initialization strategy for time-step bias, either "random" or "constant". Default is "random".
+        dt_scale (float, optional): Scaling factor for time-step projection initialization. Default is 1.0.
+        dt_init_floor (float, optional): Minimum floor value for time-step bias. Default is 1e-4.
+        dropout (float, optional): Dropout rate applied to the output. Default is 0.0.
+        conv_bias (bool, optional): If True, adds a bias to the convolution layer. Default is True.
+        bias (bool, optional): If True, adds a bias to the linear layers. Default is False.
+        device (torch.device, optional): Device on which to create parameters. Default is None.
+        dtype (torch.dtype, optional): Data type for parameters. Default is None.
+    """
     def __init__(
         self,
         d_model,
@@ -523,6 +647,18 @@ class SS2D(nn.Module):
 
 
 class VSSBlock(nn.Module):
+    """
+    Vision State-Space Block (VSSBlock) that combines self-attention with state-space models and convolutional layers.
+
+    Args:
+        hidden_dim (int, optional): Dimensionality of the hidden layers. Default is 0.
+        drop_path (float, optional): Dropout rate for the drop path. Default is 0.
+        norm_layer (Callable[..., nn.Module], optional): Normalization layer to apply. Default is LayerNorm.
+        attn_drop_rate (float, optional): Dropout rate for attention layers. Default is 0.
+        d_state (int, optional): Number of states in the state-space model. Default is 16.
+        expand (float, optional): Expansion factor for the inner dimensions in the attention block. Default is 2.0.
+        is_light_sr (bool, optional): If True, applies lightweight super-resolution optimizations. Default is False.
+    """
     def __init__(
         self,
         hidden_dim: int = 0,
@@ -548,8 +684,22 @@ class VSSBlock(nn.Module):
         self.conv_blk = CAB(hidden_dim, is_light_sr)
         self.ln_2 = nn.LayerNorm(hidden_dim)
         self.skip_scale2 = nn.Parameter(torch.ones(hidden_dim))
+        
+    def forward(
+        self, 
+        input: torch.Tensor, 
+        x_size: tuple
+    ) -> torch.Tensor:
+        """
+        Forward pass of the VSSBlock.
 
-    def forward(self, input, x_size):
+        Args:
+            input (torch.Tensor): Input tensor of shape (B, L, C), where B is batch size, L is sequence length, and C is the number of channels.
+            x_size (tuple): Tuple representing the spatial dimensions (H, W) of the input.
+
+        Returns:
+            torch.Tensor: Output tensor after applying the VSSBlock, same shape as input.
+        """
         # x [B,HW,C]
         B, L, C = input.shape
         input = input.view(B, *x_size, C).contiguous()  # [B,H,W,C]

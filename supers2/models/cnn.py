@@ -4,42 +4,67 @@
 
 
 from collections import OrderedDict
-from typing import List, Optional
-
+from typing import List, Optional, Union
 import torch
 import torch.nn.functional as F
 from torch import nn as nn
 
 
-def _make_pair(value):
+def _make_pair(
+    value: int
+) -> tuple:
+    """
+    Converts a single integer into a tuple of the same integer repeated twice.
+
+    Args:
+        value (int): Integer value to be converted.
+
+    Returns:
+        tuple: Tuple containing the integer repeated twice.
+    """
     if isinstance(value, int):
         value = (value,) * 2
     return value
 
-
-def conv_layer(in_channels, out_channels, kernel_size, bias=True):
+def conv_layer(
+    in_channels: int, 
+    out_channels: int, 
+    kernel_size: int, 
+    bias: bool = True
+) -> nn.Conv2d:
     """
-    Re-write convolution layer for adaptive `padding`.
+    Creates a 2D convolutional layer with adaptive padding.
+
+    Args:
+        in_channels (int): Number of input channels.
+        out_channels (int): Number of output channels.
+        kernel_size (int): Size of the convolution kernel.
+        bias (bool, optional): Whether to include a bias term. Defaults to True.
+
+    Returns:
+        nn.Conv2d: 2D convolutional layer with calculated padding.
     """
     kernel_size = _make_pair(kernel_size)
     padding = (int((kernel_size[0] - 1) / 2), int((kernel_size[1] - 1) / 2))
     return nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding, bias=bias)
 
-
-def activation(act_type, inplace=True, neg_slope=0.05, n_prelu=1):
+def activation(
+    act_type: str, 
+    inplace: bool = True, 
+    neg_slope: float = 0.05, 
+    n_prelu: int = 1
+) -> nn.Module:
     """
-    Activation functions for ['relu', 'lrelu', 'prelu'].
-    Parameters
-    ----------
-    act_type: str
-        one of ['relu', 'lrelu', 'prelu'].
-    inplace: bool
-        whether to use inplace operator.
-    neg_slope: float
-        slope of negative region for `lrelu` or `prelu`.
-    n_prelu: int
-        `num_parameters` for `prelu`.
-    ----------
+    Returns an activation layer based on the specified type.
+
+    Args:
+        act_type (str): Type of activation ('relu', 'lrelu', 'prelu').
+        inplace (bool, optional): If True, performs the operation in-place. Defaults to True.
+        neg_slope (float, optional): Negative slope for 'lrelu' and 'prelu'. Defaults to 0.05.
+        n_prelu (int, optional): Number of parameters for 'prelu'. Defaults to 1.
+
+    Returns:
+        nn.Module: Activation layer.
     """
     act_type = act_type.lower()
     if act_type == "relu":
@@ -54,16 +79,15 @@ def activation(act_type, inplace=True, neg_slope=0.05, n_prelu=1):
         )
     return layer
 
-
-def sequential(*args):
+def sequential(*args) -> nn.Sequential:
     """
-    Modules will be added to the a Sequential Container in the order they
-    are passed.
+    Constructs a sequential container for the provided modules.
 
-    Parameters
-    ----------
-    args: Definition of Modules in order.
-    -------
+    Args:
+        args: Modules in order of execution.
+
+    Returns:
+        nn.Sequential: A Sequential container.
     """
     if len(args) == 1:
         if isinstance(args[0], OrderedDict):
@@ -78,20 +102,52 @@ def sequential(*args):
             modules.append(module)
     return nn.Sequential(*modules)
 
-
-def pixelshuffle_block(in_channels, out_channels, upscale_factor=2, kernel_size=3):
+def pixelshuffle_block(
+    in_channels: int, 
+    out_channels: int, 
+    upscale_factor: int = 2, 
+    kernel_size: int = 3
+) -> nn.Sequential:
     """
-    Upsample features according to `upscale_factor`.
+    Creates an upsampling block using pixel shuffle.
+
+    Args:
+        in_channels (int): Number of input channels.
+        out_channels (int): Number of output channels.
+        upscale_factor (int, optional): Factor by which to upscale. Defaults to 2.
+        kernel_size (int, optional): Size of the convolution kernel. Defaults to 3.
+
+    Returns:
+        nn.Sequential: Sequential block for upsampling.
     """
     conv = conv_layer(in_channels, out_channels * (upscale_factor**2), kernel_size)
     pixel_shuffle = nn.PixelShuffle(upscale_factor)
     return sequential(conv, pixel_shuffle)
 
 
+        
 class Conv3XC(nn.Module):
     def __init__(
-        self, c_in, c_out, gain1=1, gain2=0, s=1, bias=True, relu=False, train_mode=True
-    ):
+        self, 
+        c_in: int, 
+        c_out: int, 
+        gain1: int = 1, 
+        s: int = 1, 
+        bias: bool = True, 
+        relu: bool = False, 
+        train_mode: bool = True):
+        """
+        Custom 3-stage convolutional block with optional ReLU activation and train/evaluation mode support.
+
+        Args:
+            c_in (int): Number of input channels.
+            c_out (int): Number of output channels.
+            gain1 (int, optional): Gain multiplier for intermediate layers. Defaults to 1.
+            s (int, optional): Stride value for the convolutions. Defaults to 1.
+            bias (bool, optional): Whether to include a bias term in the convolutions. Defaults to True.
+            relu (bool, optional): If True, apply a LeakyReLU activation after the convolution. Defaults to False.
+            train_mode (bool, optional): If True, use training mode with learnable parameters. Defaults to True.
+        """
         super(Conv3XC, self).__init__()
         self.train_mode = train_mode
         self.weight_concat = None
@@ -147,6 +203,9 @@ class Conv3XC(nn.Module):
         self.update_params()
 
     def update_params(self):
+        """
+        Updates the parameters for evaluation mode by combining weights from the convolution layers.
+        """
         w1 = self.conv[0].weight.data.clone().detach()
         b1 = self.conv[0].bias.data.clone().detach()
         w2 = self.conv[1].weight.data.clone().detach()
@@ -184,7 +243,19 @@ class Conv3XC(nn.Module):
         self.eval_conv.weight.data = self.weight_concat
         self.eval_conv.bias.data = self.bias_concat
 
-    def forward(self, x):
+    def forward(
+        self,
+        x: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Forward pass of the convolution block.
+
+        Args:
+            x (torch.Tensor): Input tensor.
+
+        Returns:
+            torch.Tensor: Output tensor after convolution and optional activation.
+        """
         if self.train_mode:
             pad = 1
             x_pad = F.pad(x, (pad, pad, pad, pad), "constant", 0)
@@ -200,13 +271,22 @@ class Conv3XC(nn.Module):
 
 class SPAB(nn.Module):
     def __init__(
-        self,
-        in_channels,
-        mid_channels=None,
-        out_channels=None,
-        train_mode=True,
-        bias=False,
-    ):
+        self, 
+        in_channels: int, 
+        mid_channels: Optional[int] = None, 
+        out_channels: Optional[int] = None, 
+        train_mode: bool = True, 
+        bias: bool = False):
+        """
+        Self-parameterized attention block (SPAB) with multiple convolution layers.
+
+        Args:
+            in_channels (int): Number of input channels.
+            mid_channels (Optional[int], optional): Number of middle channels. Defaults to in_channels.
+            out_channels (Optional[int], optional): Number of output channels. Defaults to in_channels.
+            train_mode (bool, optional): Indicates if the block is in training mode. Defaults to True.
+            bias (bool, optional): Include bias in convolutions. Defaults to False.
+        """
         super(SPAB, self).__init__()
         if mid_channels is None:
             mid_channels = in_channels
@@ -226,7 +306,19 @@ class SPAB(nn.Module):
         self.act1 = torch.nn.SiLU(inplace=True)
         self.act2 = activation("lrelu", neg_slope=0.1, inplace=True)
 
-    def forward(self, x):
+    def forward(
+        self, 
+        x: torch.Tensor
+    ) -> tuple:
+        """
+        Forward pass of the SPAB block.
+
+        Args:
+            x (torch.Tensor): Input tensor.
+
+        Returns:
+            tuple: (Output tensor, intermediate tensor, attention map).
+        """
         out1 = self.c1_r(x)
         out1_act = self.act1(out1)
 
@@ -243,20 +335,31 @@ class SPAB(nn.Module):
 
 class CNNSR(nn.Module):
     """
-    Swift Parameter-free Attention Network for Efficient Super-Resolution
-    with deeper layers and Channel Attention
+    Swift Parameter-free Attention Network (SPAN) for efficient super-resolution
+    with deeper layers and channel attention.
     """
 
     def __init__(
-        self,
-        in_channels,
-        out_channels,
-        feature_channels=48,
-        upscale=4,
-        bias=True,
-        train_mode=True,
-        num_blocks=10,
-    ):
+        self, 
+        in_channels: int, 
+        out_channels: int, 
+        feature_channels: int = 48, 
+        upscale: int = 4, 
+        bias: bool = True, 
+        train_mode: bool = True, 
+        num_blocks: int = 10):
+        """
+        Initializes the CNNSR model.
+
+        Args:
+            in_channels (int): Number of input channels.
+            out_channels (int): Number of output channels.
+            feature_channels (int, optional): Number of feature channels. Defaults to 48.
+            upscale (int, optional): Upscaling factor. Defaults to 4.
+            bias (bool, optional): Whether to include a bias term. Defaults to True.
+            train_mode (bool, optional): If True, the model is in training mode. Defaults to True.
+            num_blocks (int, optional): Number of attention blocks in the network. Defaults to 10.
+        """
         super(CNNSR, self).__init__()
 
         # Initial Convolution
@@ -284,8 +387,22 @@ class CNNSR(nn.Module):
         self.upsampler = pixelshuffle_block(
             feature_channels, out_channels, upscale_factor=upscale
         )
+        
+    def forward(
+        self, x: torch.Tensor, 
+        save_attentions: Optional[List[int]] = None
+    ) -> Union[torch.Tensor, tuple]:
+        """
+        Forward pass of the CNNSR model.
 
-    def forward(self, x: torch.Tensor, save_attentions: Optional[List[int]] = None):
+        Args:
+            x (torch.Tensor): Input tensor.
+            save_attentions (Optional[List[int]], optional): List of block indices from which to save attention maps.
+
+        Returns:
+            torch.Tensor: Super-resolved output.
+            tuple: If save_attentions is specified, returns (output tensor, attention maps).
+        """
         # Initial Convolution
         out_feature = self.conv_1(x)
 
