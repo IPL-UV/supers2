@@ -4,7 +4,7 @@ docs_dir: .
 site_name: SuperS2
 site_url: https://ipl-uv.github.io/supers2/
 site_author: IPL-UV
-site_description: A Python package for efficient processing of cubic earth observation (EO) data.
+site_description: A Python package for enhancing the spatial resolution of Sentinel-2 satellite images to 2.5 meters.
 
 
 # Repository
