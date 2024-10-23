@@ -1,5 +1,7 @@
-import requests
 import pathlib
+
+import requests
+
 
 def download_weights(model_snippet: pathlib.Path) -> pathlib.Path:
     """Download the weights of the model.
@@ -13,9 +15,11 @@ def download_weights(model_snippet: pathlib.Path) -> pathlib.Path:
     Raises:
         FileNotFoundError: If the file does not exist at the specified URL.
     """
-    OFFICIAL_URL = "https://github.com/JulioContrerasH/TFM_SR/releases/download/v.0.0.1/"
+    OFFICIAL_URL = (
+        "https://github.com/JulioContrerasH/TFM_SR/releases/download/v.0.0.1/"
+    )
     url = OFFICIAL_URL + model_snippet.name
-    
+
     # Download the file directly
     try:
         with requests.get(url, stream=True) as r:
@@ -25,6 +29,5 @@ def download_weights(model_snippet: pathlib.Path) -> pathlib.Path:
                     f.write(chunk)
     except requests.exceptions.RequestException as e:
         raise FileNotFoundError(f"Error downloading file from {url}: {e}")
-    
-    return model_snippet
 
+    return model_snippet

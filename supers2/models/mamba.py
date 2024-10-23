@@ -17,6 +17,7 @@ except ImportError:
         "Please install the mamba_ssm package before using MambaSR model."
     )
 
+
 class ChannelAttention(nn.Module):
     """
     Implements channel-wise attention mechanism to recalibrate feature responses.
@@ -25,11 +26,8 @@ class ChannelAttention(nn.Module):
         num_feat (int): Number of input feature channels.
         squeeze_factor (int, optional): Factor by which the feature channels are reduced in the squeeze operation. Default is 16.
     """
-    def __init__(
-        self, 
-        num_feat, 
-        squeeze_factor=16
-    ):
+
+    def __init__(self, num_feat, squeeze_factor=16):
         super(ChannelAttention, self).__init__()
         self.attention = nn.Sequential(
             nn.AdaptiveAvgPool2d(1),
@@ -39,10 +37,7 @@ class ChannelAttention(nn.Module):
             nn.Sigmoid(),
         )
 
-    def forward(
-        self, 
-        x: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass of the channel attention mechanism.
 
@@ -55,6 +50,7 @@ class ChannelAttention(nn.Module):
         y = self.attention(x)
         return x * y
 
+
 class CAB(nn.Module):
     """
     Convolutional Attention Block (CAB) that combines convolution layers and channel attention for feature enhancement.
@@ -65,12 +61,9 @@ class CAB(nn.Module):
         compress_ratio (int, optional): Compression ratio for reducing channels in the convolution layers. Default is 3.
         squeeze_factor (int, optional): Factor used in the channel attention for squeezing feature maps. Default is 30.
     """
+
     def __init__(
-        self, 
-        num_feat, 
-        is_light_sr=False, 
-        compress_ratio=3, 
-        squeeze_factor=30
+        self, num_feat, is_light_sr=False, compress_ratio=3, squeeze_factor=30
     ):
         super(CAB, self).__init__()
         if is_light_sr:  # a larger compression ratio is used for light-SR
@@ -82,10 +75,7 @@ class CAB(nn.Module):
             ChannelAttention(num_feat, squeeze_factor),
         )
 
-    def forward(
-        self, 
-        x: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass of the CAB.
 
@@ -96,6 +86,7 @@ class CAB(nn.Module):
             torch.Tensor: Enhanced feature map after convolution and attention, with the same shape as input.
         """
         return self.cab(x)
+
 
 class Mlp(nn.Module):
     """
@@ -108,6 +99,7 @@ class Mlp(nn.Module):
         act_layer (nn.Module, optional): Activation function applied after the first fully connected layer. Default is GELU.
         drop (float, optional): Dropout rate applied after the activation and second fully connected layer. Default is 0.0.
     """
+
     def __init__(
         self,
         in_features,
@@ -124,10 +116,7 @@ class Mlp(nn.Module):
         self.fc2 = nn.Linear(hidden_features, out_features)
         self.drop = nn.Dropout(drop)
 
-    def forward(
-        self, 
-        x: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass of the MLP.
 
@@ -153,6 +142,7 @@ class DynamicPosBias(nn.Module):
         dim (int): Number of input channels.
         num_heads (int): Number of attention heads.
     """
+
     def __init__(self, dim, num_heads):
         super().__init__()
         self.num_heads = num_heads
@@ -174,10 +164,7 @@ class DynamicPosBias(nn.Module):
             nn.Linear(self.pos_dim, self.num_heads),
         )
 
-    def forward(
-        self, 
-        biases: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, biases: torch.Tensor) -> torch.Tensor:
         """
         Forward pass to compute positional biases.
 
@@ -190,10 +177,7 @@ class DynamicPosBias(nn.Module):
         pos = self.pos3(self.pos2(self.pos1(self.pos_proj(biases))))
         return pos
 
-    def flops(
-        self, 
-        N: int
-    ) -> int:
+    def flops(self, N: int) -> int:
         """
         Calculate the number of floating point operations (FLOPs) required by the positional bias mechanism.
 
@@ -223,6 +207,7 @@ class Attention(nn.Module):
         proj_drop (float, optional): Dropout rate for output projection. Default is 0.0.
         position_bias (bool, optional): Whether to include dynamic positional bias in the attention mechanism. Default is True.
     """
+
     def __init__(
         self,
         dim,
@@ -250,11 +235,7 @@ class Attention(nn.Module):
         self.softmax = nn.Softmax(dim=-1)
 
     def forward(
-        self, 
-        x: torch.Tensor, 
-        H: int, 
-        W: int, 
-        mask: Optional[torch.Tensor] = None
+        self, x: torch.Tensor, H: int, W: int, mask: Optional[torch.Tensor] = None
     ) -> torch.Tensor:
         """
         Forward pass of the multi-head attention mechanism.
@@ -364,6 +345,7 @@ class SS2D(nn.Module):
         device (torch.device, optional): Device on which to create parameters. Default is None.
         dtype (torch.dtype, optional): Data type for parameters. Default is None.
     """
+
     def __init__(
         self,
         d_model,
@@ -382,7 +364,7 @@ class SS2D(nn.Module):
         device=None,
         dtype=None,
         **kwargs,
-    ):        
+    ):
 
         factory_kwargs = {"device": device, "dtype": dtype}
         super().__init__()
@@ -659,6 +641,7 @@ class VSSBlock(nn.Module):
         expand (float, optional): Expansion factor for the inner dimensions in the attention block. Default is 2.0.
         is_light_sr (bool, optional): If True, applies lightweight super-resolution optimizations. Default is False.
     """
+
     def __init__(
         self,
         hidden_dim: int = 0,
@@ -684,12 +667,8 @@ class VSSBlock(nn.Module):
         self.conv_blk = CAB(hidden_dim, is_light_sr)
         self.ln_2 = nn.LayerNorm(hidden_dim)
         self.skip_scale2 = nn.Parameter(torch.ones(hidden_dim))
-        
-    def forward(
-        self, 
-        input: torch.Tensor, 
-        x_size: tuple
-    ) -> torch.Tensor:
+
+    def forward(self, input: torch.Tensor, x_size: tuple) -> torch.Tensor:
         """
         Forward pass of the VSSBlock.
 

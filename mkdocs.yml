@@ -1,54 +1,90 @@
-site_name: superS2
-repo_url: https://github.com/csaybar/superS2
-site_url: https://csaybar.github.io/superS2
-site_description: SR for Sentinel-2
-site_author: Cesar Aybar
-edit_uri: edit/main/docs/
-repo_name: csaybar/superS2
-copyright: Maintained by <a href="https://csaybar.com">Florian</a>.
+docs_dir: .
 
-nav:
-  - Home: index.md
-  - Modules: modules.md
-plugins:
-  - search
-  - mkdocstrings:
-      handlers:
-        python:
-          setup_commands:
-            - import sys
-            - sys.path.append('../')
+# Project information
+site_name: SuperS2
+site_url: https://ipl-uv.github.io/supers2/
+site_author: IPL-UV
+site_description: A Python package for efficient processing of cubic earth observation (EO) data.
+
+
+# Repository
+repo_url: https://github.com/IPL-UV/supers2
+repo_name: supers2
+use_directory_urls: false
+
+# Configuration
 theme:
   name: material
-  feature:
-    tabs: true
+  language: en
   palette:
-    - media: "(prefers-color-scheme: light)"
-      scheme: default
-      primary: white
-      accent: deep orange
+    - scheme: default
+      primary: '#d49f0c'
+      accent: '#d49f0c'
       toggle:
-        icon: material/brightness-7
+        icon: material/toggle-switch-off-outline
         name: Switch to dark mode
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: black
-      accent: deep orange
+    - scheme: slate
+      primary: '#201357'
+      accent: white
       toggle:
-        icon: material/brightness-4
+        icon: material/toggle-switch
         name: Switch to light mode
-  icon:
-    repo: fontawesome/brands/github
+  font:
+    text: Roboto
+    code: Roboto Mono
+  logo: ./assets/images/logo_circular_sr.png
+  favicon: ./assets/images/logo_circular_sr.png
+  features:
+    - navigation.instant
+    - navigation.tabs
+    - navigation.top
+    - navigation.expand
+    - navigation.indexes
+    - header.autohide   
 
-extra:
-  social:
-    - icon: fontawesome/brands/github
-      link: https://github.com/csaybar/superS2
-    - icon: fontawesome/brands/python
-      link: https://pypi.org/project/superS2
+
+nav:
+  - Home: 
+    - README.md
+    - Contributing: CONTRIBUTING.md
+    - Changelog: CHANGELOG.md
+    - Code of conduct: CODE_OF_CONDUCT.md
+  # - Functions: 
+  #   - ./docs/FUNCTIONS.md
+  #   - Query metadata: ./docs/Functions/query_metadata.md
+  #   - Process Image: ./docs/Functions/process_image.md
+  #   - Download Data: ./docs/Functions/download_data.md
+  # - Processes: 
+  #   - ./docs/PROCESSES.md
+  #   - Recursion: ./docs/Process/recursion.md
+  #   - Concurrency: ./docs/Process/concurrency.md
+  #   - Parallelism: ./docs/Process/parallelism.md
+  #   - Difference: ./docs/Process/difference.md
+  # - Comparation:
+  #   - ./docs/COMPARATION.md
+  #   - Get: ./docs/Comparation/eedatagetPixels.md
+  #   - Compute: ./docs/Comparation/eedatacomputePixels.md
+  #   - Comparison: ./docs/Comparation/comparison.md
+  #   - Conclusion: ./docs/Comparation/conclusion.md
+
+# Plugins
+plugins:
+  - search
+  - same-dir
+  - mkdocstrings 
+  - awesome-pages
 
 markdown_extensions:
-  - toc:
-      permalink: true
-  - pymdownx.arithmatex:
-      generic: true
+  - meta
+  - admonition
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.pathconverter
+  - pymdownx.tabbed
+  - mdx_truly_sane_lists
+  - pymdownx.tasklist
+
+extra_css:
+  - assets/style.css
+extra_javascript:
+  - assets/js.js

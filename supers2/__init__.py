@@ -1,1 +1,1 @@
-from supers2.main import setmodel, predict
+from supers2.main import predict, setmodel

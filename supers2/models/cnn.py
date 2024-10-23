@@ -5,14 +5,13 @@
 
 from collections import OrderedDict
 from typing import List, Optional, Union
+
 import torch
 import torch.nn.functional as F
 from torch import nn as nn
 
 
-def _make_pair(
-    value: int
-) -> tuple:
+def _make_pair(value: int) -> tuple:
     """
     Converts a single integer into a tuple of the same integer repeated twice.
 
@@ -26,11 +25,9 @@ def _make_pair(
         value = (value,) * 2
     return value
 
+
 def conv_layer(
-    in_channels: int, 
-    out_channels: int, 
-    kernel_size: int, 
-    bias: bool = True
+    in_channels: int, out_channels: int, kernel_size: int, bias: bool = True
 ) -> nn.Conv2d:
     """
     Creates a 2D convolutional layer with adaptive padding.
@@ -48,11 +45,9 @@ def conv_layer(
     padding = (int((kernel_size[0] - 1) / 2), int((kernel_size[1] - 1) / 2))
     return nn.Conv2d(in_channels, out_channels, kernel_size, padding=padding, bias=bias)
 
+
 def activation(
-    act_type: str, 
-    inplace: bool = True, 
-    neg_slope: float = 0.05, 
-    n_prelu: int = 1
+    act_type: str, inplace: bool = True, neg_slope: float = 0.05, n_prelu: int = 1
 ) -> nn.Module:
     """
     Returns an activation layer based on the specified type.
@@ -79,6 +74,7 @@ def activation(
         )
     return layer
 
+
 def sequential(*args) -> nn.Sequential:
     """
     Constructs a sequential container for the provided modules.
@@ -102,11 +98,9 @@ def sequential(*args) -> nn.Sequential:
             modules.append(module)
     return nn.Sequential(*modules)
 
+
 def pixelshuffle_block(
-    in_channels: int, 
-    out_channels: int, 
-    upscale_factor: int = 2, 
-    kernel_size: int = 3
+    in_channels: int, out_channels: int, upscale_factor: int = 2, kernel_size: int = 3
 ) -> nn.Sequential:
     """
     Creates an upsampling block using pixel shuffle.
@@ -125,17 +119,17 @@ def pixelshuffle_block(
     return sequential(conv, pixel_shuffle)
 
 
-        
 class Conv3XC(nn.Module):
     def __init__(
-        self, 
-        c_in: int, 
-        c_out: int, 
-        gain1: int = 1, 
-        s: int = 1, 
-        bias: bool = True, 
-        relu: bool = False, 
-        train_mode: bool = True):
+        self,
+        c_in: int,
+        c_out: int,
+        gain1: int = 1,
+        s: int = 1,
+        bias: bool = True,
+        relu: bool = False,
+        train_mode: bool = True,
+    ):
         """
         Custom 3-stage convolutional block with optional ReLU activation and train/evaluation mode support.
 
@@ -243,10 +237,7 @@ class Conv3XC(nn.Module):
         self.eval_conv.weight.data = self.weight_concat
         self.eval_conv.bias.data = self.bias_concat
 
-    def forward(
-        self,
-        x: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         Forward pass of the convolution block.
 
@@ -271,12 +262,13 @@ class Conv3XC(nn.Module):
 
 class SPAB(nn.Module):
     def __init__(
-        self, 
-        in_channels: int, 
-        mid_channels: Optional[int] = None, 
-        out_channels: Optional[int] = None, 
-        train_mode: bool = True, 
-        bias: bool = False):
+        self,
+        in_channels: int,
+        mid_channels: Optional[int] = None,
+        out_channels: Optional[int] = None,
+        train_mode: bool = True,
+        bias: bool = False,
+    ):
         """
         Self-parameterized attention block (SPAB) with multiple convolution layers.
 
@@ -306,10 +298,7 @@ class SPAB(nn.Module):
         self.act1 = torch.nn.SiLU(inplace=True)
         self.act2 = activation("lrelu", neg_slope=0.1, inplace=True)
 
-    def forward(
-        self, 
-        x: torch.Tensor
-    ) -> tuple:
+    def forward(self, x: torch.Tensor) -> tuple:
         """
         Forward pass of the SPAB block.
 
@@ -340,14 +329,15 @@ class CNNSR(nn.Module):
     """
 
     def __init__(
-        self, 
-        in_channels: int, 
-        out_channels: int, 
-        feature_channels: int = 48, 
-        upscale: int = 4, 
-        bias: bool = True, 
-        train_mode: bool = True, 
-        num_blocks: int = 10):
+        self,
+        in_channels: int,
+        out_channels: int,
+        feature_channels: int = 48,
+        upscale: int = 4,
+        bias: bool = True,
+        train_mode: bool = True,
+        num_blocks: int = 10,
+    ):
         """
         Initializes the CNNSR model.
 
@@ -387,10 +377,9 @@ class CNNSR(nn.Module):
         self.upsampler = pixelshuffle_block(
             feature_channels, out_channels, upscale_factor=upscale
         )
-        
+
     def forward(
-        self, x: torch.Tensor, 
-        save_attentions: Optional[List[int]] = None
+        self, x: torch.Tensor, save_attentions: Optional[List[int]] = None
     ) -> Union[torch.Tensor, tuple]:
         """
         Forward pass of the CNNSR model.

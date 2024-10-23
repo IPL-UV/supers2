@@ -1,23 +1,42 @@
-from typing import Literal
+from typing import Literal, Tuple
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 
-def ideal_filter(shape, cutoff):
-    rows, cols = shape
-    crow, ccol = rows // 2, cols // 2
-    filter = torch.zeros((rows, cols), dtype=torch.float32)
-    for u in range(rows):
-        for v in range(cols):
-            if (u - crow) ** 2 + (v - ccol) ** 2 <= cutoff**2:
-                filter[u, v] = 1
-    filter /= filter.sum()
-    return filter
+def ideal_filter(
+    shape: Tuple[int, int], 
+    cutoff: int
+) -> torch.Tensor:
+    """
+    Creates an ideal low-pass filter.
+
+    Args:
+        shape: (rows, cols) of the filter.
+        cutoff: Cutoff radius for the filter.
+
+    Returns:
+        torch.Tensor: Normalized ideal filter.
+    """
 
 
-def butterworth_filter(shape, cutoff, order):
+def butterworth_filter(
+    shape: Tuple[int, int], 
+    cutoff: int, 
+    order: int
+) -> torch.Tensor:
+    """
+    Creates a Butterworth low-pass filter.
+
+    Args:
+        shape: (rows, cols) of the filter.
+        cutoff: Cutoff frequency.
+        order: Order of the Butterworth filter.
+
+    Returns:
+        torch.Tensor: Normalized Butterworth filter.
+    """
     rows, cols = shape
     crow, ccol = rows // 2, cols // 2
     filter = torch.zeros((rows, cols), dtype=torch.float32)
@@ -29,7 +48,20 @@ def butterworth_filter(shape, cutoff, order):
     return filter
 
 
-def gaussian_filter(shape, cutoff):
+def gaussian_filter(
+    shape: Tuple[int, int], 
+    cutoff: int
+) -> torch.Tensor:
+    """
+    Creates a Gaussian low-pass filter.
+
+    Args:
+        shape: (rows, cols) of the filter.
+        cutoff: Standard deviation for the Gaussian filter.
+
+    Returns:
+        torch.Tensor: Normalized Gaussian filter.
+    """
     rows, cols = shape
     crow, ccol = rows // 2, cols // 2
     filter = torch.zeros((rows, cols), dtype=torch.float32)
@@ -41,7 +73,22 @@ def gaussian_filter(shape, cutoff):
     return filter
 
 
-def sigmoid_filter(shape, cutoff, sharpness):
+def sigmoid_filter(
+    shape: Tuple[int, int], 
+    cutoff: int, 
+    sharpness: float
+) -> torch.Tensor:
+    """
+    Creates a Sigmoid-based low-pass filter.
+
+    Args:
+        shape: (rows, cols) of the filter.
+        cutoff: Cutoff frequency.
+        sharpness: Sharpness of the transition in the filter.
+
+    Returns:
+        torch.Tensor: Normalized Sigmoid filter.
+    """
     rows, cols = shape
     crow, ccol = rows // 2, cols // 2
     filter = torch.zeros((rows, cols), dtype=torch.float32)
@@ -54,6 +101,17 @@ def sigmoid_filter(shape, cutoff, sharpness):
 
 
 class FourierHardConstraint(torch.nn.Module):
+    """
+    Applies a low-pass Fourier constraint using different filter methods.
+
+    Args:
+        filter_method: Filter type ('ideal', 'butterworth', 'sigmoid', 'gaussian').
+        filter_hyperparameters: Hyperparameters for the chosen filter method.
+        sr_image_size: Size of the super-resolution image (height, width).
+        scale_factor: Scale factor for the super-resolution task.
+        device: Device where the filters and tensors are located. Default is "cpu".
+    """
+
     def __init__(
         self,
         filter_method: Literal["ideal", "butterworth", "sigmoid", "gaussian"],
@@ -89,7 +147,21 @@ class FourierHardConstraint(torch.nn.Module):
         self.low_pass_mask = low_pass_mask.to(device)
         self.scale_factor = scale_factor
 
-    def forward(self, lr, sr):
+    def forward(
+        self, 
+        lr: torch.Tensor, 
+        sr: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Applies the Fourier constraint on the super-resolution image.
+
+        Args:
+            lr: Low-resolution input tensor.
+            sr: Super-resolution output tensor.
+
+        Returns:
+            torch.Tensor: Hybrid image after applying Fourier constraint.
+        """
         # Upsample the LR image to the HR size
         lr_up = torch.nn.functional.interpolate(
             lr, size=sr.shape[-2:], mode="bicubic", antialias=True
@@ -121,6 +193,17 @@ class FourierHardConstraint(torch.nn.Module):
 
 
 class CNNHardConstraint(nn.Module):
+    """
+    Applies a convolutional hard constraint using predefined filters for low-pass and high-pass filtering.
+
+    Args:
+        filter_method: The type of filter to apply ('ideal', 'butterworth', 'gaussian', 'sigmoid').
+        filter_hyperparameters: Dictionary containing hyperparameters specific to the chosen filter method.
+        scale_factor: Scaling factor used to determine kernel size and cutoff frequency.
+        in_channels: Number of input channels.
+        out_channels: List of channels to be processed (default is [0, 1, 2, 3, 4, 5]).
+    """
+
     def __init__(
         self,
         filter_method: Literal["ideal", "butterworth", "gaussian", "sigmoid"],
@@ -173,7 +256,21 @@ class CNNHardConstraint(nn.Module):
         self.conv.weight.data = self.conv.weight.data
         self.out_channels = out_channels
 
-    def forward(self, lr, sr):
+    def forward(
+        self, 
+        lr: torch.Tensor, 
+        sr: torch.Tensor
+    ) -> torch.Tensor:
+        """
+        Applies the filter constraint on the super-resolution image.
+
+        Args:
+            lr: Low-resolution input tensor.
+            sr: Super-resolution output tensor.
+
+        Returns:
+            torch.Tensor: The resulting hybrid image after applying the constraint.
+        """
         # Upsample the LR image to the size of SR
         lr = lr[:, self.out_channels]
 
@@ -188,21 +285,3 @@ class CNNHardConstraint(nn.Module):
         hybrid_image = lr_filtered + (sr - sr_filtered)
 
         return hybrid_image
-
-
-# self = fourier_hard_constraint(
-#    filter_method="butterworth",
-#    filter_hyperparameters={"order": 2},
-#    sr_image_size=(484, 484),
-#    scale_factor=4,
-# )
-# import matplotlib.pyplot as plt
-# fig, ax = plt.subplots(1, 3, figsize=(15, 5))
-# ax[0].imshow(lr[0, 0:3].permute(1, 2, 0))
-# ax[0].set_title("LR")
-# ax[1].imshow(sr[0, 0:3].permute(1, 2, 0))
-# ax[1].set_title("SR")
-# ax[2].imshow(sr_hat[0, 0:3].permute(1, 2, 0))
-# ax[2].set_title("SR_hat")
-# plt.savefig("output2.png")
-# plt.close()

@@ -4,8 +4,9 @@ from typing import Literal, Union
 
 import torch
 
-from supers2.models.tricks import CNNHardConstraint
 from supers2.download import download_weights
+from supers2.models.tricks import CNNHardConstraint
+
 
 class CustomModel(torch.nn.Module):
     def __init__(self, SRmodel: torch.nn.Module, HardConstraint: torch.nn.Module):
@@ -16,6 +17,7 @@ class CustomModel(torch.nn.Module):
     def forward(self, x):
         sr = self.sr_model(x)
         return self.hard_constraint(x, sr)
+
 
 def get_model_name(
     model_type: Literal["SR", "Fusionx2", "Fusionx4"],
@@ -37,7 +39,7 @@ def get_model_name(
     model_fullpath = weights_path / (model + ".pth")
     if not model_fullpath.exists():
         download_weights(model_fullpath)
-    
+
     print(f"Weights [{model_type}]: '{model_fullpath}'")
 
     return model_fullpath
