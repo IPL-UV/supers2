@@ -22,7 +22,11 @@
 <a href="https://pycqa.github.io/isort/" target="_blank">
     <img src="https://img.shields.io/badge/%20imports-isort-%231674b1?style=flat&labelColor=ef8336" alt="isort">
 </a>
+<a href="https://colab.research.google.com/drive/1TD014aY145q1reKN644egUtIM6tIx9vH?usp=sharing" target="_blank">
+    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+</a>
 </p>
+
 
 ---
 
@@ -34,14 +38,14 @@
 
 ## **Overview** 📊
 
-**supers2** is a Python package designed to enhance the spatial resolution of Sentinel-2 satellite images to 2.5 meters using advanced neural network models. It facilitates downloading, preparing, and processing the Sentinel-2 data and applies deep learning models to enhance the spatial resolution of the imagery.
+**supers2** is a Python package designed to enhance the spatial resolution of Sentinel-2 satellite images to 2.5 meters using advanced neural network models. It facilitates downloading (cubo package), preparing, and processing the Sentinel-2 data and applies deep learning models to enhance the spatial resolution of the imagery.
 
 ## **Installation** ⚙️
 
 Install the latest version from PyPI:
 
 ```bash
-pip install supers2
+pip install cubo supers2
 ```
 
 ## **How to use** 🛠️
@@ -106,9 +110,9 @@ import matplotlib.pyplot as plt
 
 # Plot the original and enhanced-resolution images
 fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-ax[0].imshow(X[[9, 8, 7]].permute(1, 2, 0).cpu().numpy()*2)
+ax[0].imshow(X[[2, 1, 0]].permute(1, 2, 0).cpu().numpy()*4)
 ax[0].set_title("Original S2")
-ax[1].imshow(superX[[9, 8, 7]].permute(1, 2, 0).cpu().numpy()*2)
+ax[1].imshow(superX[[2, 1, 0]].permute(1, 2, 0).cpu().numpy()*4)
 ax[1].set_title("Enhanced Resolution S2")
 plt.show()
 ```
