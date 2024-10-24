@@ -1,8 +1,8 @@
 import torch
 from supers2.models.utils import assert_tensor_validity
 from supers2.models.utils import revert_padding
-from opensr_model.diffusion.utils import DDIMSampler
-from opensr_model.diffusion.latentdiffusion import LatentDiffusion
+from supers2.models.opensr_diffusion.diffusion.utils import DDIMSampler
+from supers2.models.opensr_diffusion.diffusion.latentdiffusion import LatentDiffusion
 
 from skimage.exposure import match_histograms
 
@@ -132,7 +132,6 @@ class SRLatentDiffusion(torch.nn.Module):
         eta: float = 1.0,
         custom_steps: int = 100,
         temperature: float = 1.0,
-        histogram_matching: bool = True,
         verbose: bool = True
     ):
         """Obtain the super resolution of the given image.
@@ -166,7 +165,7 @@ class SRLatentDiffusion(torch.nn.Module):
         ddim, latent, time_range = self._prepare_model(
             X=Xnorm, eta=eta, custom_steps=custom_steps, verbose=False
         )
-        iterator = tqdm(time_range, desc="DDIM Sampler", total=custom_steps,disable=verbose)
+        iterator = tqdm(time_range, desc="DDIM Sampler", total=custom_steps,disable=not verbose)
 
         # Iterate over the timesteps
         for i, step in enumerate(iterator):
@@ -214,3 +213,4 @@ class SRLatentDiffusion(torch.nn.Module):
         image1_hat = torch.from_numpy(np_image1_hat).to(image1.device)
 
         return image1_hat
+    
