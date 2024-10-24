@@ -9,10 +9,8 @@ from supers2.setup import (load_fusionx2_model, load_fusionx4_model,
 
 def setmodel(
     resolution: Literal["2.5m", "5m", "10m"] = "2.5m",
-    SR_model_name: Literal["cnn", "swin", "mamba"] = "cnn",
-    SR_model_size: Literal[
-        "lightweight", "small", "medium", "expanded", "large"
-    ] = "small",
+    SR_model_name: Literal["cnn", "swin", "mamba", "diffusion"] = "cnn",
+    SR_model_size: Literal["lightweight", "small", "medium", "expanded", "large"] = "small",
     SR_model_loss: Literal["l1", "superloss", "adversarial"] = "l1",
     Fusionx2_model_name: Literal["cnn", "swin", "mamba"] = "cnn",
     Fusionx2_model_size: Literal[
