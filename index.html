@@ -426,8 +426,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#prepare-the-data" class="md-nav__link">
-    Prepare the data
+  <a href="#prepare-the-data-cpu-and-gpu-usage" class="md-nav__link">
+    Prepare the data (CPU and GPU usage)
   </a>
   
 </li>
@@ -559,10 +559,23 @@
     <span class="n">resolution</span><span class="o">=</span><span class="mi">10</span>
 <span class="p">)</span>
 </code></pre></div>
-<h4 id="prepare-the-data"><strong>Prepare the data</strong></h4>
+<h4 id="prepare-the-data-cpu-and-gpu-usage"><strong>Prepare the data (CPU and GPU usage)</strong></h4>
+<p>When converting the NumPy array to a PyTorch tensor, the use of <code>cuda()</code> is optional and depends on whether the user has access to a GPU. Below is the explanation for both cases:</p>
+<ul>
+<li><strong>GPU:</strong> If a GPU is available and CUDA is installed, you can transfer the tensor to the GPU using <code>.cuda()</code>. This improves the processing speed, especially for large datasets or deep learning models.</li>
+</ul>
+<ul>
+<li><strong>CPU:</strong> If no GPU is available, the tensor will be processed on the CPU, which is the default behavior in PyTorch. In this case, simply omit the <code>.cuda()</code> call.</li>
+</ul>
+<p>Here’s how you can handle both scenarios dynamically:</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Convert the data array to NumPy and scale</span>
 <span class="n">original_s2_numpy</span> <span class="o">=</span> <span class="p">(</span><span class="n">da</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">/</span> <span class="mi">10_000</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
-<span class="n">X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">original_s2_numpy</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span>
+
+<span class="c1"># Check if CUDA is available, use GPU if possible, otherwise fallback to CPU</span>
+<span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+
+<span class="c1"># Create the tensor and move it to the appropriate device (CPU or GPU)</span>
+<span class="n">X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">original_s2_numpy</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 </code></pre></div>
 <h4 id="define-the-resolution-enhancement-model"><strong>Define the resolution enhancement model</strong></h4>
 <div class="highlight"><pre><span></span><code><span class="c1"># Set up the model to enhance the spatial resolution</span>
