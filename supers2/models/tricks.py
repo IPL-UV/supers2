@@ -253,7 +253,6 @@ class CNNHardConstraint(nn.Module):
         self.conv.weight.data = (
             weight_data.unsqueeze(0).unsqueeze(0).repeat(in_channels, 1, 1, 1)
         )
-        self.conv.weight.data = self.conv.weight.data
         self.out_channels = out_channels
 
     def forward(

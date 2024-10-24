@@ -76,11 +76,26 @@ da = cubo.create(
     resolution=10
 )
 ```
-#### **Prepare the data**
+
+#### **Prepare the data (CPU and GPU usage)**
+
+When converting the NumPy array to a PyTorch tensor, the use of `cuda()` is optional and depends on whether the user has access to a GPU. Below is the explanation for both cases:
+
+- **GPU:** If a GPU is available and CUDA is installed, you can transfer the tensor to the GPU using `.cuda()`. This improves the processing speed, especially for large datasets or deep learning models.
+
+- **CPU:** If no GPU is available, the tensor will be processed on the CPU, which is the default behavior in PyTorch. In this case, simply omit the `.cuda()` call.
+
+Here’s how you can handle both scenarios dynamically:
+
 ```python
 # Convert the data array to NumPy and scale
 original_s2_numpy = (da[11].compute().to_numpy() / 10_000).astype("float32")
-X = torch.from_numpy(original_s2_numpy).float().cuda()
+
+# Check if CUDA is available, use GPU if possible, otherwise fallback to CPU
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# Create the tensor and move it to the appropriate device (CPU or GPU)
+X = torch.from_numpy(original_s2_numpy).float().to(device)
 ```
 
 #### **Define the resolution enhancement model**
