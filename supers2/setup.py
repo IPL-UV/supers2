@@ -271,7 +271,7 @@ def load_srx4_model(
     model_params["upscale"] = 4
 
     # Load the model
-    SRX4 = load_model(model_name, model_params, kwargs)
+    SRX4 = load_model(model_name, model_params, device=device, **kwargs)
     SRX4.load_state_dict(weights_data)
     SRX4.eval()
     for param in SRX4.parameters():
