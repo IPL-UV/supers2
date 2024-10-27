@@ -3,16 +3,13 @@ from typing import List, Optional, Set, Tuple, Union
 import torch
 import torch as th
 from einops import rearrange
-
-from supers2.models.opensr_diffusion.denoiser.utils import (BasicTransformerBlock, Downsample,
-                                         Normalize, QKVAttention,
-                                         QKVAttentionLegacy, TimestepBlock,
-                                         Upsample, checkpoint, conv_nd,
-                                         convert_module_to_f16,
-                                         convert_module_to_f32, linear,
-                                         normalization, timestep_embedding,
-                                         zero_module)
 from torch import nn
+
+from supers2.models.opensr_diffusion.denoiser.utils import (
+    BasicTransformerBlock, Downsample, Normalize, QKVAttention,
+    QKVAttentionLegacy, TimestepBlock, Upsample, checkpoint, conv_nd,
+    convert_module_to_f16, convert_module_to_f32, linear, normalization,
+    timestep_embedding, zero_module)
 
 
 class ResBlock(TimestepBlock):
@@ -636,20 +633,22 @@ class UNetModel(nn.Module):
                 use_checkpoint=use_checkpoint,
                 use_scale_shift_norm=use_scale_shift_norm,
             ),
-            AttentionBlock(
-                ch,
-                use_checkpoint=use_checkpoint,
-                num_heads=num_heads,
-                num_head_channels=dim_head,
-                use_new_attention_order=use_new_attention_order,
-            )
-            if not use_spatial_transformer
-            else SpatialTransformer(
-                ch,
-                num_heads,
-                dim_head,
-                depth=transformer_depth,
-                context_dim=context_dim,
+            (
+                AttentionBlock(
+                    ch,
+                    use_checkpoint=use_checkpoint,
+                    num_heads=num_heads,
+                    num_head_channels=dim_head,
+                    use_new_attention_order=use_new_attention_order,
+                )
+                if not use_spatial_transformer
+                else SpatialTransformer(
+                    ch,
+                    num_heads,
+                    dim_head,
+                    depth=transformer_depth,
+                    context_dim=context_dim,
+                )
             ),
             ResBlock(
                 ch,

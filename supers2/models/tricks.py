@@ -5,10 +5,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-def ideal_filter(
-    shape: Tuple[int, int], 
-    cutoff: int
-) -> torch.Tensor:
+def ideal_filter(shape: Tuple[int, int], cutoff: int) -> torch.Tensor:
     """
     Creates an ideal low-pass filter.
 
@@ -19,13 +16,19 @@ def ideal_filter(
     Returns:
         torch.Tensor: Normalized ideal filter.
     """
+    rows, cols = shape
+    crow, ccol = rows // 2, cols // 2
+    filter = torch.zeros((rows, cols), dtype=torch.float32)
+    for u in range(rows):
+        for v in range(cols):
+            distance = ((u - crow) ** 2 + (v - ccol) ** 2) ** 0.5
+            if distance <= cutoff:
+                filter[u, v] = 1
+    filter /= filter.sum()
+    return filter
 
 
-def butterworth_filter(
-    shape: Tuple[int, int], 
-    cutoff: int, 
-    order: int
-) -> torch.Tensor:
+def butterworth_filter(shape: Tuple[int, int], cutoff: int, order: int) -> torch.Tensor:
     """
     Creates a Butterworth low-pass filter.
 
@@ -48,10 +51,7 @@ def butterworth_filter(
     return filter
 
 
-def gaussian_filter(
-    shape: Tuple[int, int], 
-    cutoff: int
-) -> torch.Tensor:
+def gaussian_filter(shape: Tuple[int, int], cutoff: int) -> torch.Tensor:
     """
     Creates a Gaussian low-pass filter.
 
@@ -74,9 +74,7 @@ def gaussian_filter(
 
 
 def sigmoid_filter(
-    shape: Tuple[int, int], 
-    cutoff: int, 
-    sharpness: float
+    shape: Tuple[int, int], cutoff: int, sharpness: float
 ) -> torch.Tensor:
     """
     Creates a Sigmoid-based low-pass filter.
@@ -147,11 +145,7 @@ class FourierHardConstraint(torch.nn.Module):
         self.low_pass_mask = low_pass_mask.to(device)
         self.scale_factor = scale_factor
 
-    def forward(
-        self, 
-        lr: torch.Tensor, 
-        sr: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, lr: torch.Tensor, sr: torch.Tensor) -> torch.Tensor:
         """
         Applies the Fourier constraint on the super-resolution image.
 
@@ -255,11 +249,7 @@ class CNNHardConstraint(nn.Module):
         )
         self.out_channels = out_channels
 
-    def forward(
-        self, 
-        lr: torch.Tensor, 
-        sr: torch.Tensor
-    ) -> torch.Tensor:
+    def forward(self, lr: torch.Tensor, sr: torch.Tensor) -> torch.Tensor:
         """
         Applies the filter constraint on the super-resolution image.
 

@@ -56,9 +56,11 @@ pip install cubo supers2
 
 ```python
 import cubo
-import supers2
-import torch
 import numpy as np
+import torch
+
+import supers2
+
 ```
 
 #### **Download Sentinel-2 L2A cube**
