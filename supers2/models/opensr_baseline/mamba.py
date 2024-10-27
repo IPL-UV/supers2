@@ -272,7 +272,7 @@ class Attention(nn.Module):
                 1 - group_size[1], group_size[1], device=attn.device
             )
             biases = torch.stack(
-                torch.meshgrid([position_bias_h, position_bias_w])
+                torch.meshgrid([position_bias_h, position_bias_w], indexing="ij")                
             )  # 2, 2Gh-1, 2W2-1
             biases = (
                 biases.flatten(1).transpose(0, 1).contiguous().float()
@@ -281,7 +281,7 @@ class Attention(nn.Module):
             # get pair-wise relative position index for each token inside the window
             coords_h = torch.arange(group_size[0], device=attn.device)
             coords_w = torch.arange(group_size[1], device=attn.device)
-            coords = torch.stack(torch.meshgrid([coords_h, coords_w]))  # 2, Gh, Gw
+            coords = torch.stack(torch.meshgrid([coords_h, coords_w], indexing="ij"))
             coords_flatten = torch.flatten(coords, 1)  # 2, Gh*Gw
             relative_coords = (
                 coords_flatten[:, :, None] - coords_flatten[:, None, :]

@@ -830,7 +830,7 @@ class BasicTransformerBlock(nn.Module):
             torch.Tensor: The output tensor of shape `(batch_size, seq_len, dim)`.
         """
         return checkpoint(
-            self._forward, (x, context), self.parameters(), False#self.checkpoint
+            self._forward, (x, context), self.parameters(), False  # self.checkpoint
         )
 
     def _forward(
