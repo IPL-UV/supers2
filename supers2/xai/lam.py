@@ -1,7 +1,9 @@
+from typing import Optional
+
 import numpy as np
 import torch
 import torch.nn.functional as F
-from typing import Optional
+
 from supers2.xai.utils import gini, vis_saliency_kde
 
 
@@ -84,7 +86,11 @@ def GaussianBlurPath(sigma: float, fold: int, kernel_size: int = 5):
                 padded_image, diff_kernel, groups=channels
             ).squeeze(0)
 
-        return image_interpolation, lambda_derivative_interpolation, kernel_interpolation
+        return (
+            image_interpolation,
+            lambda_derivative_interpolation,
+            kernel_interpolation,
+        )
 
     return path_interpolation_func
 
@@ -208,7 +214,12 @@ def attribution_objective(attr_func, h: int, w: int, window: int = 16):
 
 
 def attr_grad(
-    tensor: torch.Tensor, h: int, w: int, window: int = 8, reduce: str = "sum", scale: float = 1.0
+    tensor: torch.Tensor,
+    h: int,
+    w: int,
+    window: int = 8,
+    reduce: str = "sum",
+    scale: float = 1.0,
 ) -> torch.Tensor:
     """
     Computes the gradient magnitude within a specified window of a 4D tensor and reduces the result.
@@ -252,13 +263,13 @@ def attr_grad(
 
 def lam(
     X: torch.Tensor,
-    model: torch.nn.Module,    
+    model: torch.nn.Module,
     h: Optional[int] = 240,
     w: Optional[int] = 240,
     window: Optional[int] = 32,
     fold: Optional[int] = 25,
     kernel_size: Optional[int] = 13,
-    sigma: Optional[float] = 3.5
+    sigma: Optional[float] = 3.5,
 ):
     """
     Computes the Local Attribution Map (LAM) for an input tensor using a specified model
@@ -283,10 +294,12 @@ def lam(
         scale = output.shape[-1] // X.shape[-1]
 
     # Create the path interpolation function
-    path_interpolation_func = GaussianBlurPath(sigma=sigma, fold=fold, kernel_size=kernel_size)
-    #a, b, c = path_interpolation_func(X)
+    path_interpolation_func = GaussianBlurPath(
+        sigma=sigma, fold=fold, kernel_size=kernel_size
+    )
+    # a, b, c = path_interpolation_func(X)
 
-    # Create the attribution objective function    
+    # Create the attribution objective function
     attr_objective = attribution_objective(attr_grad, h, w, window=window)
 
     # Compute the path gradient for the input tensor
@@ -295,7 +308,7 @@ def lam(
     )
 
     # Sum the accumulated gradients across all bands
-    lam_results = torch.sum(torch.from_numpy(np.abs(grad_accumulate_list)), dim=0)    
+    lam_results = torch.sum(torch.from_numpy(np.abs(grad_accumulate_list)), dim=0)
     grad_2d = np.abs(lam_results.sum(axis=0))
     grad_max = grad_2d.max()
     grad_norm = grad_2d / grad_max

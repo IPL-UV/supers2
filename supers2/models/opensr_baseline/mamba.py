@@ -272,7 +272,7 @@ class Attention(nn.Module):
                 1 - group_size[1], group_size[1], device=attn.device
             )
             biases = torch.stack(
-                torch.meshgrid([position_bias_h, position_bias_w], indexing="ij")                
+                torch.meshgrid([position_bias_h, position_bias_w], indexing="ij")
             )  # 2, 2Gh-1, 2W2-1
             biases = (
                 biases.flatten(1).transpose(0, 1).contiguous().float()

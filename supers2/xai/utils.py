@@ -1,9 +1,12 @@
-import torch
-import numpy as np
-
 from typing import Union
 
-def torch_gaussian_kde(points: torch.Tensor, weights: torch.Tensor, grid: torch.Tensor, bandwidth: float) -> torch.Tensor:
+import numpy as np
+import torch
+
+
+def torch_gaussian_kde(
+    points: torch.Tensor, weights: torch.Tensor, grid: torch.Tensor, bandwidth: float
+) -> torch.Tensor:
     """
     Perform Kernel Density Estimation (KDE) using a Gaussian kernel with PyTorch.
 
@@ -17,7 +20,7 @@ def torch_gaussian_kde(points: torch.Tensor, weights: torch.Tensor, grid: torch.
         torch.Tensor: A tensor representing KDE values evaluated at the grid positions.
     """
     # Compute pairwise squared distances between grid and data points
-    distances = torch.cdist(grid.T, points.T, p=2)**2
+    distances = torch.cdist(grid.T, points.T, p=2) ** 2
 
     # Apply Gaussian kernel
     kernel_values = torch.exp(-distances / (2 * bandwidth**2))
@@ -27,7 +30,10 @@ def torch_gaussian_kde(points: torch.Tensor, weights: torch.Tensor, grid: torch.
 
     return kde_values
 
-def vis_saliency_kde(map: torch.Tensor, scale: int = 4, bandwidth: float = 1.0) -> torch.Tensor:
+
+def vis_saliency_kde(
+    map: torch.Tensor, scale: int = 4, bandwidth: float = 1.0
+) -> torch.Tensor:
     """
     Visualize saliency map KDE using a Gaussian kernel.
 
@@ -42,21 +48,23 @@ def vis_saliency_kde(map: torch.Tensor, scale: int = 4, bandwidth: float = 1.0) 
     # Flatten the saliency map and prepare coordinates
     grad_flat = map.flatten()
     datapoint_y, datapoint_x = torch.meshgrid(
-        torch.arange(map.shape[0], dtype=torch.float32), 
-        torch.arange(map.shape[1], dtype=torch.float32)
+        torch.arange(map.shape[0], dtype=torch.float32),
+        torch.arange(map.shape[1], dtype=torch.float32),
     )
     pixels = torch.vstack([datapoint_x.flatten(), datapoint_y.flatten()])
 
     # Generate grid for KDE evaluation
     Y, X = torch.meshgrid(
-        torch.arange(0, map.shape[0], dtype=torch.float32), 
+        torch.arange(0, map.shape[0], dtype=torch.float32),
         torch.arange(0, map.shape[1], dtype=torch.float32),
-        indexing='ij'
+        indexing="ij",
     )
     grid_positions = torch.vstack([X.flatten(), Y.flatten()])
 
     # Perform KDE on the grid
-    kde_values = torch_gaussian_kde(pixels, grad_flat, grid_positions, bandwidth=bandwidth)
+    kde_values = torch_gaussian_kde(
+        pixels, grad_flat, grid_positions, bandwidth=bandwidth
+    )
 
     # Reshape and normalize KDE output
     Z = kde_values.reshape(map.shape)
@@ -64,25 +72,23 @@ def vis_saliency_kde(map: torch.Tensor, scale: int = 4, bandwidth: float = 1.0) 
 
     # Reshape to the SR scale
     Z = torch.nn.functional.interpolate(
-        Z[None, None],
-        scale_factor=scale,
-        mode='bicubic',
-        antialias=True
+        Z[None, None], scale_factor=scale, mode="bicubic", antialias=True
     ).squeeze()
 
     return Z
 
+
 def gini(array: Union[np.ndarray, list]) -> float:
     """
-    Calculate the Gini coefficient of a 1-dimensional array. The Gini coefficient is a measure of inequality 
+    Calculate the Gini coefficient of a 1-dimensional array. The Gini coefficient is a measure of inequality
     where 0 represents perfect equality and 1 represents maximal inequality.
-    
+
     Args:
         array (Union[np.ndarray, list]): A 1D array or list of numerical values for which the Gini coefficient is calculated.
-    
+
     Returns:
         float: The Gini coefficient, a value between 0 and 1.
-    
+
     Notes:
         - This implementation is based on the formula for the Gini coefficient described here:
           http://www.statsdirect.com/help/default.htm#nonparametric_methods/gini.htm
@@ -112,5 +118,5 @@ def gini(array: Union[np.ndarray, list]) -> float:
 
     # Compute the Gini coefficient using the sorted values and index-based formula
     gini_coefficient = (np.sum((2 * index - n - 1) * array)) / (n * np.sum(array))
-    
+
     return gini_coefficient
