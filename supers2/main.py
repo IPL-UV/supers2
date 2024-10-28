@@ -63,7 +63,7 @@ def predict(
 
     # Check if the models are loaded
     if models is None:
-        models = setmodel(resolution=resolution)
+        models = setmodel(resolution=resolution, device=X.device)
 
     # if resolution is 10m
     if resolution == "10m":
@@ -232,7 +232,8 @@ def predict_large(
         output_fullname (Union[str, pathlib.Path]): The output image with the S2 bands
         resolution (Literal["2.5m", "5m", "10m"], optional): The final resolution of the
             tensor. Defaults to "2.5m".
-        models (Optional[dict], optional): The dictionary with the loaded models. Defaults to None.
+        models (Optional[dict], optional): The dictionary with the loaded models. Defaults
+            to None.
 
     Returns:
         pathlib.Path: The path to the output image
@@ -263,7 +264,7 @@ def predict_large(
         overlap=overlap,
     )
 
-    # Define the output metadata and create the output image
+    # Define the output metadata
     output_metadata = metadata.copy()
     output_metadata["width"] = metadata["width"] * res_n
     output_metadata["height"] = metadata["height"] * res_n
@@ -276,34 +277,81 @@ def predict_large(
         metadata["transform"].f,
     )
     output_metadata["blockxsize"] = 128 * res_n
-    output_metadata["blockysize"] = 128 * res_n
+    output_metadata["blockysize"] = 128 * res_n    
+    
+    # Create the output image
     with rio.open(output_fullname, "w", **output_metadata) as dst:
         data_np = np.zeros(
             (metadata["count"], metadata["height"] * res_n, metadata["width"] * res_n),
             dtype=np.uint16,
         )
         dst.write(data_np)
+    
+    # Check if the models are loaded
+    if models is None:
+        models = setmodel(resolution=resolution, device=device)
 
     # Iterate over the image
-    for index in tqdm.tqdm(nruns):
-
-        # Read a block of the image
+    with rio.open(output_fullname, "r+") as dst:
         with rio.open(image_fullname) as src:
-            window = rio.windows.Window(index[1], index[0], 128, 128)
-            X = torch.from_numpy(src.read(window=window)).float().to(device)
+            for index, point in enumerate(tqdm.tqdm(nruns)):
 
-        # Predict the super-resolution
-        result = predict(X=X / 10_000, models=models, resolution=resolution) * 10_000
-        result[result < 0] = 0
-        result = result.cpu().numpy().astype(np.uint16)
+                # Read a block of the image
+                window = rio.windows.Window(point[1], point[0], 128, 128)
+                X = torch.from_numpy(src.read(window=window)).float().to(device)
+                
+                # Predict the super-resolution
+                result = predict(X=X / 10_000, models=models, resolution=resolution) * 10_000
+                result[result < 0] = 0
+                result = result.cpu().numpy().astype(np.uint16)
+            
+                # Define the offset in the output space
+                # If the point is at the border, the offset is 0 
+                # otherwise consider the overlap
+                if point[1] == 0:
+                    offset_x = 0
+                else:
+                    offset_x = point[1] * res_n + overlap * res_n // 2
 
-        # Write the block to the output
-        with rio.open(output_fullname, "r+") as dst:
-            # Define your patch (x_off, y_off, width, height)
-            window = rio.windows.Window(
-                index[1] * res_n, index[0] * res_n, 128 * res_n, 128 * res_n
-            )
-            dst.write(result, window=window)
+                if point[0] == 0:
+                    offset_y = 0
+                else:
+                    offset_y = point[0] * res_n + overlap * res_n // 2
+    
+                # Define the length of the patch
+                # The patch is always 224x224
+                # There is three conditions:
+                #  - The patch is at the corner begining (0, *) or (*, 0)
+                #  - The patch is at the corner ending (width, *) or (*, height)
+                #  - The patch is in the middle of the image
+                if offset_x == 0:
+                    skip = overlap * res_n // 2
+                    length_x = 128 * res_n - skip
+                    result = result[:, :, :length_x]
+                elif (offset_x + 128) == metadata["width"]:
+                    length_x = 128 * res_n
+                    result = result[:, :, :length_x]                
+                else:
+                    skip = overlap * res_n // 2
+                    length_x = 128 * res_n - skip
+                    result = result[:, :, skip:(128 * res_n)]
+
+                # Do the same for the Y axis
+                if offset_y == 0:
+                    skip = overlap * res_n // 2
+                    length_y = 128 * res_n - skip
+                    result = result[:, :length_y, :]
+                elif (offset_y + 128) == metadata["height"]:
+                    length_y = 128 * res_n
+                    result = result[:, :length_y, :]                
+                else:
+                    skip = overlap * res_n // 2
+                    length_y = 128 * res_n - overlap * res_n // 2
+                    result = result[:, skip:(128 * res_n), :]
+                    
+                # Write the result in the output image
+                window = rio.windows.Window(offset_x, offset_y, length_x, length_y)
+                dst.write(result, window=window)
 
     return pathlib.Path(output_fullname)
 
