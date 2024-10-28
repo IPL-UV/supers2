@@ -122,7 +122,9 @@ class WindowAttention(nn.Module):
             -(self.window_size[1] - 1), self.window_size[1], dtype=torch.float32
         )
         relative_coords_table = (
-            torch.stack(torch.meshgrid([relative_coords_h, relative_coords_w], indexing="ij"))
+            torch.stack(
+                torch.meshgrid([relative_coords_h, relative_coords_w], indexing="ij")
+            )
             .permute(1, 2, 0)
             .contiguous()
             .unsqueeze(0)
