@@ -144,8 +144,6 @@ def Path_gradient(
             - results_numpy (np.ndarray): Model outputs for each interpolated image.
             - image_interpolation (np.ndarray): Interpolated images created by `path_interpolation_func`.
     """
-    # Set the model to training mode
-    model = model.train()
 
     # Prepare image for interpolation and initialize gradient accumulation array
     image_interpolation, lambda_derivative_interpolation, _ = path_interpolation_func(
@@ -270,11 +268,13 @@ def lam(
     fold: Optional[int] = 25,
     kernel_size: Optional[int] = 13,
     sigma: Optional[float] = 3.5,
+    robustness_metric: Optional[str] = True
 ):
     """
-    Computes the Local Attribution Map (LAM) for an input tensor using a specified model
-    and attribution function. The function calculates the path gradient for each band in the
-    input tensor and combines the results to generate the LAM.
+    Computes the Local Attribution Map (LAM) for an input tensor using 
+    a specified model and attribution function. The function calculates
+    the path gradient for each band in the input tensor and combines the
+    results to generate the LAM.
 
     Args:
         X (torch.Tensor): Input tensor of shape (channels, height, width).
@@ -283,11 +283,28 @@ def lam(
         h (int): The top coordinate of the window within the image.
         w (int): The left coordinate of the window within the image.
         window (int, optional): The size of the square window. Defaults to 16.
-        fold (int, optional): Number of interpolation steps for the blurring path. Defaults to 10.
+        fold (int, optional): Number of interpolation steps for the blurring path.
+            Defaults to 10.
+        kernel_size (int, optional): Size of the Gaussian kernel. Defaults to 5.
+        sigma (float, optional): Initial standard deviation for the Gaussian blur.
+            Defaults to 3.5.
+        robustness_metric (bool, optional): Whether to return the robustness metric.
+            Defaults to True.
 
     Returns:
-        torch.Tensor: The Local Attribution Map (LAM) for the input tensor.
+        tuple: A tuple containing the following elements:
+            - kde_map (np.ndarray): KDE estimation of the LAM.
+            - complexity_metric (float): Gini index of the LAM that 
+                measures the consistency of the attribution. The 
+                larger the value, the more use more complex attribution
+                patterns to solve the task.
+            - robustness_metric (np.ndarray): Blurriness sensitivity of the LAM.
+                The sensitivity measures the average gradient magnitude of the
+                interpolated images.
+            - robustness_vector (np.ndarray): Vector of gradient magnitudes for
+                each interpolated image.
     """
+
     # Get the scale of the results
     with torch.no_grad():
         output = model(X[None])
@@ -303,10 +320,10 @@ def lam(
     attr_objective = attribution_objective(attr_grad, h, w, window=window)
 
     # Compute the path gradient for the input tensor
-    grad_accumulate_list, _, _ = Path_gradient(
+    grad_accumulate_list,results_numpy, image_interpolation = Path_gradient(
         X, model, attr_objective, path_interpolation_func
     )
-
+    
     # Sum the accumulated gradients across all bands
     lam_results = torch.sum(torch.from_numpy(np.abs(grad_accumulate_list)), dim=0)
     grad_2d = np.abs(lam_results.sum(axis=0))
@@ -318,5 +335,11 @@ def lam(
 
     # KDE estimation
     kde_map = vis_saliency_kde(grad_norm, scale=scale, bandwidth=1.0)
+    complexity_metric = (1 - gini_index) * 100
 
-    return kde_map, (1 - gini_index) * 100
+    # Estimate blurriness sensitivity
+    robustness_vector = np.abs(grad_accumulate_list).mean(axis=(1, 2, 3))
+    robustness_metric = np.trapz(robustness_vector)
+
+    # Return the LAM results
+    return kde_map, complexity_metric, robustness_metric, robustness_vector
