@@ -1,5 +1,5 @@
 import pathlib
-from typing import Literal, Optional, Union
+from typing import Literal, Optional, Union, Tuple
 
 import numpy as np
 import rasterio as rio
@@ -9,6 +9,7 @@ import tqdm
 from supers2.dataclass import SRexperiment
 from supers2.setup import load_model
 from supers2.utils import define_iteration
+from supers2.trained_models import SRmodels
 
 
 def setmodel(
@@ -394,3 +395,50 @@ def predict_rgbnir(
         ).squeeze(0)
     
     return result
+
+
+def uncertainty(
+    X: torch.Tensor,
+    models: str = "all",
+    weights_path: str = None,
+    device: str = "cpu",
+    **kwargs
+) -> Tuple[torch.Tensor, torch.Tensor]:
+    """Generate the mean and standard deviation of the super-resolution models
+
+    Args:
+        X (torch.Tensor): The input tensor with the S2 bands (RGBNIR)
+        models (str, optional): The models to use. Defaults to "all".
+        weights_path (str, optional): The path to the weights. Defaults 
+            to None.
+        device (str, optional): The device to use. Defaults to "cpu".
+
+    Returns:
+        Tuple[torch.Tensor, torch.Tensor]: The mean and standard deviation
+    """
+
+    if models == "all":
+        models = list(SRmodels.model_dump()["object"].keys())
+
+    container = []
+    for model in tqdm.tqdm(models):
+        # Load a model
+        model_object = load_model(
+            snippet=model,
+            weights_path=weights_path,
+            device=device,
+            **kwargs
+        )
+
+        # Run the model
+        X_torch = torch.from_numpy((X / 10_000)).float().to(device)
+        prediction = model_object(X_torch[None]).squeeze().cpu()
+        
+        # Store the prediction
+        container.append(prediction)
+
+    # Calculate the mean and standard deviation
+    mean = torch.stack(container).mean(dim=0)
+    std = torch.stack(container).std(dim=0)
+
+    return mean, std

@@ -12,7 +12,7 @@ from supers2.models.opensr_diffusion.utils import (assert_tensor_validity,
 
 
 class SRmodel(torch.nn.Module):
-    def __init__(self, device: str = "cpu"):
+    def __init__(self, device: str = "cpu", scale_factor: int = 4, **kwargs):
         super().__init__()
 
         # Set up the model
@@ -29,6 +29,7 @@ class SRmodel(torch.nn.Module):
             first_stage_key="image",
             cond_stage_key="LR_image",
         )
+        self.scale_factor = scale_factor
         self.model.eval()
 
         for param in self.model.parameters():
