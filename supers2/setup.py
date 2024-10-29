@@ -59,18 +59,20 @@ def load_model(
 
     # Normalize snippet to lowercase for case-insensitive matching
     snippet = snippet.lower()
+    
+    # Is a zero-parameter model?
+    if "__simple__" not in snippet:
+        # Retrieve model weights information and validate snippet and path
+        model_weights = SRweights(
+            snippet=snippet, path=weights_path, force_download=force_download
+        )
+        model_fullpath = model_weights.fullname
 
-    # Retrieve model weights information and validate snippet and path
-    model_weights = SRweights(
-        snippet=snippet, path=weights_path, force_download=force_download
-    )
-    model_fullpath = model_weights.fullname
-
-    # Load the weights
-    model_weights_data = torch.load(
-        model_fullpath, map_location=torch.device("cpu"), weights_only=True
-    )
-
+        # Load the weights
+        model_weights_data = torch.load(
+            model_fullpath, map_location=torch.device("cpu"), weights_only=True
+        )
+    
     # Dynamically load the model class based on the specified snippet
     modelclass_path = AllModels.object[snippet].srclass
     modelmodule, modelclass_name = modelclass_path.rsplit(".", 1)
@@ -81,7 +83,7 @@ def load_model(
     model_parameters = AllModels.object[snippet].parameters
     model_parameters["device"] = device
     model = modelclass(**model_parameters)
-    model.load_state_dict(model_weights_data)
+    model.load_state_dict(model_weights_data) if "__simple__" not in snippet else None
     model.eval()  # Set model to evaluation mode
     model.to(device)  # Move model to device
     for param in model.parameters():
