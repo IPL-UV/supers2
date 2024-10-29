@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "supers2"
-version = "0.0.7"
+version = "0.0.8"
 description = "SR for Sentinel-2"
 authors = ["Cesar Aybar <cesar.aybar@uv.es>", "Julio Contreras <julio.contreras@uv.es>"]
 repository = "https://github.com/IPL-UV/supers2"
