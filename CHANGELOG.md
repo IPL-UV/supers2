@@ -16,6 +16,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 ### Fixed
 - Fixed minor bugs in the data processing module related to edge cases.
 
-## [0.0.5] - 2024-10-24
+## [0.0.7] - 2024-10-24
 ### Added
 - First public release with support for enhancing Sentinel-2 spatial resolution to 2.5 meters.

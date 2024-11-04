@@ -1,7 +1,7 @@
 # 
 
 <p align="center">
-  <img src="./assets/images/banner_supers2.png" width="50%">
+  <img src="https://raw.githubusercontent.com/IPL-UV/supers2/refs/heads/main/assets/images/banner_supers2.png" width="50%">
 </p>
 
 <p align="center">
@@ -50,9 +50,7 @@ pip install cubo supers2
 
 ## **How to use** 🛠️
 
-### **Basic usage: enhancing spatial resolution of Sentinel-2 images** 🌍
-
-#### **Load libraries**
+### **Load libraries**
 
 ```python
 import cubo
@@ -63,7 +61,7 @@ import supers2
 
 ```
 
-#### **Download Sentinel-2 L2A cube**
+### **Download Sentinel-2 L2A cube**
 
 ```python
 # Create a Sentinel-2 L2A data cube for a specific location and date range
@@ -79,7 +77,7 @@ da = cubo.create(
 )
 ```
 
-#### **Prepare the data (CPU and GPU usage)**
+### **Prepare the data (CPU and GPU usage)**
 
 When converting the NumPy array to a PyTorch tensor, the use of `cuda()` is optional and depends on whether the user has access to a GPU. Below is the explanation for both cases:
 
@@ -100,17 +98,105 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 X = torch.from_numpy(original_s2_numpy).float().to(device)
 ```
 
-#### **Define the resolution enhancement model**
+### **Configuring the Spatial Resolution Enhancement Model**
+
+In **supers2**, you can choose from several types of models to enhance the spatial resolution of Sentinel-2 images. Below are the configurations for each model type and their respective [size options](https://github.com/IPL-UV/supers2/releases/tag/v0.1.0). Each model is configured using `supers2.setmodel`, where the `sr_model_snippet` argument defines the super-resolution model, and `fusionx2_model_snippet` and `fusionx4_model_snippet` correspond to additional fusion models.
+
+### **Available Models:**
+
+#### **1. CNN Models**
+CNN-based models are available in the following sizes: `lightweight`, `small`, `medium`, `expanded`, and `large`.
+
 ```python
-# Set up the model to enhance the spatial resolution
+# Example configuration for a CNN model
 models = supers2.setmodel(
-    SR_model_loss="l1", 
-    SR_model_name="cnn", 
-    SR_model_size="small", 
-    Fusionx2_model_size="lightweight", 
-    Fusionx4_model_size="lightweight"
+    sr_model_snippet="sr__opensrbaseline__cnn__lightweight__l1",
+    fusionx2_model_snippet="fusionx2__opensrbaseline__cnn__lightweight__l1",
+    fusionx4_model_snippet="fusionx4__opensrbaseline__cnn__lightweight__l1",
+    resolution="2.5m",
+    device=device
 )
 ```
+Model size options (replace `small` with the desired size):
+
+- `lightweight`
+- `small`
+- `medium`
+- `expanded`
+- `large`
+
+#### **2. SWIN Models**
+SWIN models are optimized for varying levels of detail and offer size options: `lightweight`, `small`, `medium`, and `expanded`.
+
+```python
+# Example configuration for a SWIN model
+models = supers2.setmodel(
+    sr_model_snippet="sr__opensrbaseline__swin__lightweight__l1",
+    fusionx2_model_snippet="fusionx2__opensrbaseline__cnn__lightweight__l1",
+    fusionx4_model_snippet="fusionx4__opensrbaseline__cnn__lightweight__l1",
+    resolution="2.5m",
+    device=device
+)
+```
+
+Available sizes:
+
+- `lightweight`
+- `small`
+- `medium`
+- `expanded`
+
+#### **3. MAMBA Models**
+MAMBA models also come in various sizes, similar to SWIN and CNN: `lightweight`, `small`, `medium`, and `expanded`.
+
+```python
+# Example configuration for a MAMBA model
+models = supers2.setmodel(
+    sr_model_snippet="sr__opensrbaseline__mamba__lightweight__l1",
+    fusionx2_model_snippet="fusionx2__opensrbaseline__cnn__lightweight__l1",
+    fusionx4_model_snippet="fusionx4__opensrbaseline__cnn__lightweight__l1",
+    resolution="2.5m",
+    device=device
+)
+```
+
+Available sizes:
+
+- `lightweight`
+- `small`
+- `medium`
+- `expanded`
+
+
+#### **4. Diffusion Model**
+The opensrdiffusion model is only available in the `large` size. This model is suited for deep resolution enhancement without additional configurations.
+
+```python
+# Configuration for the Diffusion model
+models = supers2.setmodel(
+    sr_model_snippet="sr__opensrdiffusion__large__l1",
+    fusionx2_model_snippet="fusionx2__opensrbaseline__cnn__lightweight__l1",
+    fusionx4_model_snippet="fusionx4__opensrbaseline__cnn__lightweight__l1",
+    resolution="2.5m",
+    device=device
+)
+```
+
+#### **5. Simple Models (Bilinear and Bicubic)**
+For fast interpolation, bilinear and bicubic interpolation models can be used. These models do not require complex configurations and are useful for quick evaluations of enhanced resolution.
+
+```python
+from supers2.models.simple import BilinearSR, BicubicSR
+
+# Bilinear Interpolation Model
+bilinear_model = BilinearSR(device=device, scale_factor=4).to(device)
+super_bilinear = bilinear_model(X[None])
+
+# Bicubic Interpolation Model
+bicubic_model = BicubicSR(device=device, scale_factor=4).to(device)
+super_bicubic = bicubic_model(X[None])
+``` 
+
 ### **Apply spatial resolution enhancement**
 
 ```python
@@ -135,7 +221,7 @@ plt.show()
 ```
 
 <p align="center">
-  <img src="./assets/images/example1.png" width="100%">
+  <img src="https://raw.githubusercontent.com/IPL-UV/supers2/refs/heads/main/assets/images/example1.png" width="100%">
 </p>
 
 ## **Supported features and filters** ✨
