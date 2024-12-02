@@ -36,30 +36,29 @@
 
 ---
 
-
 ## **Table of Contents**
 
-- [**Overview** 📊](#overview-)
+- [**Overview** 🌍](#overview-)
 - [**Installation** ⚙️](#installation-)
 - [**How to use** 🛠️](#how-to-use-)
   - [**Load libraries**](#load-libraries)
   - [**Download Sentinel-2 L2A cube**](#download-sentinel-2-l2a-cube)
   - [**Prepare the data (CPU and GPU usage)**](#prepare-the-data-cpu-and-gpu-usage)
   - [**Default model setup**](#default-model-setup)
-  - [**Configuring the Spatial Resolution Enhancement Model**](#configuring-the-spatial-resolution-enhancement-model)
-  - [**Available Models:**](#available-models)
-    - [**1. CNN Models**](#1-cnn-models)
-    - [**2. SWIN Models**](#2-swin-models)
-    - [**3. MAMBA Models**](#3-mamba-models)
-    - [**4. Diffusion Model**](#4-diffusion-model)
-    - [**5. Simple Models (Bilinear and Bicubic)**](#5-simple-models-bilinear-and-bicubic)
-  - [**Predict only RGBNIR bands** 🌍](#predict-only-rgbnir-bands-)
-  - [**Estimate the uncertainty of the model** 📊](#estimate-the-uncertainty-of-the-model-)
-  - [**Estimate the Local Attention Map of the model** 📊](#estimate-the-local-attention-map-of-the-model-)
-  - [**Use the opensr-test and supers2 to analyze the hallucination pixels** 📊](#use-the-opensr-test-and-supers2-to-analyze-the-hallucination-pixels-)
+  - [**Configuring Model**](#configuring-model)
+- [**Available Models:**](#available-models)
+  - [**1. CNN Models**](#1-cnn-models)
+  - [**2. SWIN Models**](#2-swin-models)
+  - [**3. MAMBA Models**](#3-mamba-models)
+  - [**4. Diffusion Model**](#4-diffusion-model)
+  - [**5. Simple Models (Bilinear and Bicubic)**](#5-simple-models-bilinear-and-bicubic)
+- [**Predict only RGBNIR bands**](#predict-only-rgbnir-bands)
+- [**Estimate the uncertainty of the model** 📊](#estimate-the-uncertainty-of-the-model-)
+- [**Estimate the Local Attention Map of the model** 📊](#estimate-the-local-attention-map-of-the-model-)
 
 
-## **Overview** 📊
+
+## **Overview** 🌍
 
 **supers2** is a Python package designed to enhance the spatial resolution of Sentinel-2 satellite images to 2.5 meters using a set of neural network models. 
 
@@ -113,7 +112,7 @@ When converting a NumPy array to a PyTorch tensor:
 
 - **GPU:** Use `.cuda()` to transfer the tensor to the GPU if available, improving speed for large datasets or models.
 
-- **CPU:** If no GPU is available, PyTorch defaults to the CPU; omit .`.cuda()`.
+- **CPU:** If no GPU is available, PyTorch defaults to the CPU; omit `.cuda()`.
 
 Here’s how you can handle both scenarios dynamically:
 
@@ -281,9 +280,9 @@ super_bicubic = bicubic_model(X[None]).squeeze(0)
   <img src="assets/images/bibi.png" width="100%">
 </p>
 
-## **Apply spatial resolution enhancement**
 
-## **Predict only RGBNIR bands** 🌍
+
+## **Predict only RGBNIR bands**
 
 ```python
 superX = supers2.predict_rgbnir(X[[2, 1, 0, 6]])
@@ -341,5 +340,12 @@ plt.title("Robustness Vector")
 plt.show()
 ```
 
+<p align="center">
+  <img src="assets/images/kernel.png" width="50%">
+</p>
+<br>
+<p align="center">
+  <img src="assets/images/vector.png" width="70%">
+</p>
 
-## Use the opensr-test and supers2 to analyze the hallucination pixels 📊
+<!-- ## Use the opensr-test and supers2 to analyze the hallucination pixels 📊 -->
