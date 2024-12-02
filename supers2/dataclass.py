@@ -74,7 +74,11 @@ class AvailableModels(pydantic.BaseModel):
     object: Dict[str, AvailableModel]
 
 
-def download_weights(model_snippet: pathlib.Path) -> pathlib.Path:
+def download_weights(
+        total_size_in_bytes, 
+        filename_tmp,
+        model_snippet,
+        r_link):
     """Download the weights of the model.
 
     Args:
@@ -91,11 +95,11 @@ def download_weights(model_snippet: pathlib.Path) -> pathlib.Path:
 
     # Download the file directly
     try:
-        with requests.get(url, stream=True) as r:
-            r.raise_for_status()  # This will raise an HTTPError if the file does not exist
-            with open(model_snippet, "wb") as f:
-                for chunk in tqdm.tqdm(r.iter_content(chunk_size=8192)):
-                    f.write(chunk)
+        with tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True) as progress_bar:
+            with open(filename_tmp, 'wb') as f:
+                for chunk in r_link.iter_content(chunk_size=8192):
+                        progress_bar.update(len(chunk))
+                        f.write(chunk)
     except requests.exceptions.RequestException as e:
         raise FileNotFoundError(f"Error downloading file from {url}: {e}")
 
