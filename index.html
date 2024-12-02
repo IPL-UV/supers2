@@ -390,7 +390,7 @@
       
         <li class="md-nav__item">
   <a href="#overview" class="md-nav__link">
-    Overview 📊
+    Overview 🌍
   </a>
   
 </li>
@@ -499,15 +499,8 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#apply-spatial-resolution-enhancement" class="md-nav__link">
-    Apply spatial resolution enhancement
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#predict-only-rgbnir-bands" class="md-nav__link">
-    Predict only RGBNIR bands 🌍
+    Predict only RGBNIR bands
   </a>
   
 </li>
@@ -529,13 +522,6 @@
         
       </ul>
     </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#use-the-opensr-test-and-supers2-to-analyze-the-hallucination-pixels" class="md-nav__link">
-    Use the opensr-test and supers2 to analyze the hallucination pixels 📊
-  </a>
   
 </li>
       
@@ -590,14 +576,16 @@
 <hr />
 <h2 id="table-of-contents"><strong>Table of Contents</strong></h2>
 <ul>
-<li><a href="#overview-"><strong>Overview</strong> 📊</a></li>
+<li><a href="#overview-"><strong>Overview</strong> 🌍</a></li>
 <li><a href="#installation-"><strong>Installation</strong> ⚙️</a></li>
 <li><a href="#how-to-use-"><strong>How to use</strong> 🛠️</a><ul>
 <li><a href="#load-libraries"><strong>Load libraries</strong></a></li>
 <li><a href="#download-sentinel-2-l2a-cube"><strong>Download Sentinel-2 L2A cube</strong></a></li>
 <li><a href="#prepare-the-data-cpu-and-gpu-usage"><strong>Prepare the data (CPU and GPU usage)</strong></a></li>
 <li><a href="#default-model-setup"><strong>Default model setup</strong></a></li>
-<li><a href="#configuring-the-spatial-resolution-enhancement-model"><strong>Configuring the Spatial Resolution Enhancement Model</strong></a></li>
+<li><a href="#configuring-model"><strong>Configuring Model</strong></a></li>
+</ul>
+</li>
 <li><a href="#available-models"><strong>Available Models:</strong></a><ul>
 <li><a href="#1-cnn-models"><strong>1. CNN Models</strong></a></li>
 <li><a href="#2-swin-models"><strong>2. SWIN Models</strong></a></li>
@@ -606,14 +594,11 @@
 <li><a href="#5-simple-models-bilinear-and-bicubic"><strong>5. Simple Models (Bilinear and Bicubic)</strong></a></li>
 </ul>
 </li>
-<li><a href="#predict-only-rgbnir-bands-"><strong>Predict only RGBNIR bands</strong> 🌍</a></li>
+<li><a href="#predict-only-rgbnir-bands"><strong>Predict only RGBNIR bands</strong></a></li>
 <li><a href="#estimate-the-uncertainty-of-the-model-"><strong>Estimate the uncertainty of the model</strong> 📊</a></li>
 <li><a href="#estimate-the-local-attention-map-of-the-model-"><strong>Estimate the Local Attention Map of the model</strong> 📊</a></li>
-<li><a href="#use-the-opensr-test-and-supers2-to-analyze-the-hallucination-pixels-"><strong>Use the opensr-test and supers2 to analyze the hallucination pixels</strong> 📊</a></li>
 </ul>
-</li>
-</ul>
-<h2 id="overview"><strong>Overview</strong> 📊</h2>
+<h2 id="overview"><strong>Overview</strong> 🌍</h2>
 <p><strong>supers2</strong> is a Python package designed to enhance the spatial resolution of Sentinel-2 satellite images to 2.5 meters using a set of neural network models. </p>
 <h2 id="installation"><strong>Installation</strong> ⚙️</h2>
 <p>Install the latest version from PyPI:</p>
@@ -650,7 +635,7 @@
 <li><strong>GPU:</strong> Use <code>.cuda()</code> to transfer the tensor to the GPU if available, improving speed for large datasets or models.</li>
 </ul>
 <ul>
-<li><strong>CPU:</strong> If no GPU is available, PyTorch defaults to the CPU; omit .<code>.cuda()</code>.</li>
+<li><strong>CPU:</strong> If no GPU is available, PyTorch defaults to the CPU; omit <code>.cuda()</code>.</li>
 </ul>
 <p>Here’s how you can handle both scenarios dynamically:</p>
 <p><div class="highlight"><pre><span></span><code><span class="c1"># Check if CUDA is available, use GPU if possible</span>
@@ -783,8 +768,7 @@ Model size options (replace <code>small</code> with the desired size):</p>
   <img src="assets/images/bibi.png" width="100%">
 </p>
 
-<h2 id="apply-spatial-resolution-enhancement"><strong>Apply spatial resolution enhancement</strong></h2>
-<h2 id="predict-only-rgbnir-bands"><strong>Predict only RGBNIR bands</strong> 🌍</h2>
+<h2 id="predict-only-rgbnir-bands"><strong>Predict only RGBNIR bands</strong></h2>
 <div class="highlight"><pre><span></span><code><span class="n">superX</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">predict_rgbnir</span><span class="p">(</span><span class="n">X</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">]])</span>
 </code></pre></div>
 <h2 id="estimate-the-uncertainty-of-the-model"><strong>Estimate the uncertainty of the model</strong> 📊</h2>
@@ -832,7 +816,15 @@ Model size options (replace <code>small</code> with the desired size):</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Robustness Vector&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<h2 id="use-the-opensr-test-and-supers2-to-analyze-the-hallucination-pixels">Use the opensr-test and supers2 to analyze the hallucination pixels 📊</h2>
+<p align="center">
+  <img src="assets/images/kernel.png" width="50%">
+</p>
+<p><br></p>
+<p align="center">
+  <img src="assets/images/vector.png" width="70%">
+</p>
+
+<!-- ## Use the opensr-test and supers2 to analyze the hallucination pixels 📊 -->
 
               
             </article>
