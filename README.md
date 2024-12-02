@@ -36,6 +36,29 @@
 
 ---
 
+
+## **Table of Contents**
+
+- [**Overview** 📊](#overview-)
+- [**Installation** ⚙️](#installation-)
+- [**How to use** 🛠️](#how-to-use-)
+  - [**Load libraries**](#load-libraries)
+  - [**Download Sentinel-2 L2A cube**](#download-sentinel-2-l2a-cube)
+  - [**Prepare the data (CPU and GPU usage)**](#prepare-the-data-cpu-and-gpu-usage)
+  - [**Default model setup**](#default-model-setup)
+  - [**Configuring the Spatial Resolution Enhancement Model**](#configuring-the-spatial-resolution-enhancement-model)
+  - [**Available Models:**](#available-models)
+    - [**1. CNN Models**](#1-cnn-models)
+    - [**2. SWIN Models**](#2-swin-models)
+    - [**3. MAMBA Models**](#3-mamba-models)
+    - [**4. Diffusion Model**](#4-diffusion-model)
+    - [**5. Simple Models (Bilinear and Bicubic)**](#5-simple-models-bilinear-and-bicubic)
+  - [**Predict only RGBNIR bands** 🌍](#predict-only-rgbnir-bands-)
+  - [**Estimate the uncertainty of the model** 📊](#estimate-the-uncertainty-of-the-model-)
+  - [**Estimate the Local Attention Map of the model** 📊](#estimate-the-local-attention-map-of-the-model-)
+  - [**Use the opensr-test and supers2 to analyze the hallucination pixels** 📊](#use-the-opensr-test-and-supers2-to-analyze-the-hallucination-pixels-)
+
+
 ## **Overview** 📊
 
 **supers2** is a Python package designed to enhance the spatial resolution of Sentinel-2 satellite images to 2.5 meters using a set of neural network models. 
@@ -73,13 +96,13 @@ import supers2
 ```python
 # Create a Sentinel-2 L2A data cube for a specific location and date range
 da = cubo.create(
-    lat=4.31, 
-    lon=-76.2, 
-    collection="sentinel-2-l2a", 
-    bands=["B02", "B03", "B04", "B05", "B06", "B07", "B08", "B8A", "B11", "B12"], 
-    start_date="2021-06-01", 
-    end_date="2021-10-10", 
-    edge_size=128, 
+    lat=39.49152740347753,
+    lon=-0.4308725142800361,
+    collection="sentinel-2-l2a",
+    bands=["B02", "B03", "B04", "B05", "B06", "B07", "B08", "B8A", "B11", "B12"],
+    start_date="2023-01-01",
+    end_date="2023-12-31",
+    edge_size=64,
     resolution=10
 )
 ```
@@ -107,7 +130,8 @@ original_s2_numpy = (da[11].compute().to_numpy() / 10_000).astype("float32")
 # Create the tensor and move it to the appropriate device (CPU or GPU)
 X = torch.from_numpy(original_s2_numpy).float().to(device)
 ```
-#### **Default model setup**
+### **Default model setup**
+
 The default model is pre-trained for 2.5m resolution but supports 5m and 10m resolutions via the `resolution` parameter. It uses lightweight CNN architectures for super-resolution and fusion (`sr_model_snippet`, `fusionx2_model_snippet`, `fusionx4_model_snippet`). Models run on CPU or GPU, configurable via `device`. For more details on the architectures, refer to the [section](#available-models).
 
 ```python
@@ -133,13 +157,13 @@ plt.show()
   <img src="assets/images/first_plot.png" width="100%">
 </p>
 
-### **Configuring the Spatial Resolution Enhancement Model**
+### **Configuring Model**
 
 In **supers2**, you can choose from several types of models to enhance the spatial resolution of Sentinel-2 images. Below are the configurations for each model type and their respective [size options](https://github.com/IPL-UV/supers2/releases/tag/v0.1.0). Each model is configured using `supers2.setmodel`, where the `sr_model_snippet` argument defines the super-resolution model, and `fusionx2_model_snippet` and `fusionx4_model_snippet` correspond to additional fusion models.
 
-### **Available Models:**
+## **Available Models:**
 
-#### **1. CNN Models**
+### **1. CNN Models**
 CNN-based models are available in the following sizes: `lightweight`, `small`, `medium`, `expanded`, and `large`.
 
 ```python
@@ -163,7 +187,13 @@ Model size options (replace `small` with the desired size):
 - `expanded`
 - `large`
 
-#### **2. SWIN Models**
+
+<p align="center">
+  <img src="assets/images/cnns_plot.png" width="100%">
+</p>
+
+
+### **2. SWIN Models**
 SWIN models are optimized for varying levels of detail and offer size options: `lightweight`, `small`, `medium`, and `expanded`.
 
 ```python
@@ -184,7 +214,13 @@ Available sizes:
 - `medium`
 - `expanded`
 
-#### **3. MAMBA Models**
+
+<p align="center">
+  <img src="assets/images/swins_plot.png" width="100%">
+</p>
+
+
+### **3. MAMBA Models**
 MAMBA models also come in various sizes, similar to SWIN and CNN: `lightweight`, `small`, `medium`, and `expanded`.
 
 ```python
@@ -205,8 +241,13 @@ Available sizes:
 - `medium`
 - `expanded`
 
+<p align="center">
+  <img src="assets/images/mambas_plot.png" width="100%">
+</p>
 
-#### **4. Diffusion Model**
+
+
+### **4. Diffusion Model**
 The opensrdiffusion model is only available in the `large` size. This model is suited for deep resolution enhancement without additional configurations.
 
 ```python
@@ -220,30 +261,35 @@ models = supers2.setmodel(
 )
 ```
 
-#### **5. Simple Models (Bilinear and Bicubic)**
+### **5. Simple Models (Bilinear and Bicubic)**
 For fast interpolation, bilinear and bicubic interpolation models can be used. These models do not require complex configurations and are useful for quick evaluations of enhanced resolution.
+
 
 ```python
 from supers2.models.simple import BilinearSR, BicubicSR
 
 # Bilinear Interpolation Model
 bilinear_model = BilinearSR(device=device, scale_factor=4).to(device)
-super_bilinear = bilinear_model(X[None])
+super_bilinear = bilinear_model(X[None]).squeeze(0)
 
 # Bicubic Interpolation Model
 bicubic_model = BicubicSR(device=device, scale_factor=4).to(device)
-super_bicubic = bicubic_model(X[None])
+super_bicubic = bicubic_model(X[None]).squeeze(0)
 ``` 
 
-### **Apply spatial resolution enhancement**
+<p align="center">
+  <img src="assets/images/bibi.png" width="100%">
+</p>
 
-### **Predict only RGBNIR bands** 🌍
+## **Apply spatial resolution enhancement**
+
+## **Predict only RGBNIR bands** 🌍
 
 ```python
 superX = supers2.predict_rgbnir(X[[2, 1, 0, 6]])
 ```
 
-### **Estimate the uncertainty of the model** 📊
+## **Estimate the uncertainty of the model** 📊
 
 ```python
 from supers2.trained_models import SRmodels
@@ -267,10 +313,10 @@ ax[1].imshow(std_map[0:3].cpu().numpy().transpose(1, 2, 0)*100)
 ax[1].set_title("Standard Deviation")
 plt.show()
 ```
-
 <p align="center">
-  <img src="https://raw.githubusercontent.com/IPL-UV/supers2/refs/heads/main/assets/images/example1.png" width="100%">
+  <img src="assets/images/mean.png" width="100%">
 </p>
+
 
 ### Estimate the Local Attention Map of the model 📊
 
@@ -296,4 +342,4 @@ plt.show()
 ```
 
 
-### Use the opensr-test and supers2 to analyze the hallucination pixels 📊
+## Use the opensr-test and supers2 to analyze the hallucination pixels 📊
