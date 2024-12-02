@@ -77,6 +77,7 @@ da = cubo.create(
     edge_size=128, 
     resolution=10
 )
+```
 
 ### **Prepare the data (CPU and GPU usage)**
 
