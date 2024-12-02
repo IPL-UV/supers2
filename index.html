@@ -382,6 +382,13 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#table-of-contents" class="md-nav__link">
+    Table of Contents
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#overview" class="md-nav__link">
     Overview 📊
   </a>
@@ -422,8 +429,7 @@
     Prepare the data (CPU and GPU usage)
   </a>
   
-    <nav class="md-nav" aria-label="Prepare the data (CPU and GPU usage)">
-      <ul class="md-nav__list">
+</li>
         
           <li class="md-nav__item">
   <a href="#default-model-setup" class="md-nav__link">
@@ -432,19 +438,19 @@
   
 </li>
         
-      </ul>
-    </nav>
-  
-</li>
-        
           <li class="md-nav__item">
-  <a href="#configuring-the-spatial-resolution-enhancement-model" class="md-nav__link">
-    Configuring the Spatial Resolution Enhancement Model
+  <a href="#configuring-model" class="md-nav__link">
+    Configuring Model
   </a>
   
 </li>
         
-          <li class="md-nav__item">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#available-models" class="md-nav__link">
     Available Models:
   </a>
@@ -491,27 +497,28 @@
     </nav>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#apply-spatial-resolution-enhancement" class="md-nav__link">
     Apply spatial resolution enhancement
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#predict-only-rgbnir-bands" class="md-nav__link">
     Predict only RGBNIR bands 🌍
   </a>
   
 </li>
-        
-          <li class="md-nav__item">
+      
+        <li class="md-nav__item">
   <a href="#estimate-the-uncertainty-of-the-model" class="md-nav__link">
     Estimate the uncertainty of the model 📊
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="Estimate the uncertainty of the model 📊">
+      <ul class="md-nav__list">
         
           <li class="md-nav__item">
   <a href="#estimate-the-local-attention-map-of-the-model" class="md-nav__link">
@@ -520,15 +527,15 @@
   
 </li>
         
-          <li class="md-nav__item">
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#use-the-opensr-test-and-supers2-to-analyze-the-hallucination-pixels" class="md-nav__link">
     Use the opensr-test and supers2 to analyze the hallucination pixels 📊
   </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -581,6 +588,31 @@
 <p><strong>GitHub</strong>: <a href="https://github.com/IPL-UV/supers2">https://github.com/IPL-UV/supers2</a> 🌐</p>
 <p><strong>PyPI</strong>: <a href="https://pypi.org/project/supers2/">https://pypi.org/project/supers2/</a> 🛠️</p>
 <hr />
+<h2 id="table-of-contents"><strong>Table of Contents</strong></h2>
+<ul>
+<li><a href="#overview-"><strong>Overview</strong> 📊</a></li>
+<li><a href="#installation-"><strong>Installation</strong> ⚙️</a></li>
+<li><a href="#how-to-use-"><strong>How to use</strong> 🛠️</a><ul>
+<li><a href="#load-libraries"><strong>Load libraries</strong></a></li>
+<li><a href="#download-sentinel-2-l2a-cube"><strong>Download Sentinel-2 L2A cube</strong></a></li>
+<li><a href="#prepare-the-data-cpu-and-gpu-usage"><strong>Prepare the data (CPU and GPU usage)</strong></a></li>
+<li><a href="#default-model-setup"><strong>Default model setup</strong></a></li>
+<li><a href="#configuring-the-spatial-resolution-enhancement-model"><strong>Configuring the Spatial Resolution Enhancement Model</strong></a></li>
+<li><a href="#available-models"><strong>Available Models:</strong></a><ul>
+<li><a href="#1-cnn-models"><strong>1. CNN Models</strong></a></li>
+<li><a href="#2-swin-models"><strong>2. SWIN Models</strong></a></li>
+<li><a href="#3-mamba-models"><strong>3. MAMBA Models</strong></a></li>
+<li><a href="#4-diffusion-model"><strong>4. Diffusion Model</strong></a></li>
+<li><a href="#5-simple-models-bilinear-and-bicubic"><strong>5. Simple Models (Bilinear and Bicubic)</strong></a></li>
+</ul>
+</li>
+<li><a href="#predict-only-rgbnir-bands-"><strong>Predict only RGBNIR bands</strong> 🌍</a></li>
+<li><a href="#estimate-the-uncertainty-of-the-model-"><strong>Estimate the uncertainty of the model</strong> 📊</a></li>
+<li><a href="#estimate-the-local-attention-map-of-the-model-"><strong>Estimate the Local Attention Map of the model</strong> 📊</a></li>
+<li><a href="#use-the-opensr-test-and-supers2-to-analyze-the-hallucination-pixels-"><strong>Use the opensr-test and supers2 to analyze the hallucination pixels</strong> 📊</a></li>
+</ul>
+</li>
+</ul>
 <h2 id="overview"><strong>Overview</strong> 📊</h2>
 <p><strong>supers2</strong> is a Python package designed to enhance the spatial resolution of Sentinel-2 satellite images to 2.5 meters using a set of neural network models. </p>
 <h2 id="installation"><strong>Installation</strong> ⚙️</h2>
@@ -602,13 +634,13 @@
 <h3 id="download-sentinel-2-l2a-cube"><strong>Download Sentinel-2 L2A cube</strong></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Create a Sentinel-2 L2A data cube for a specific location and date range</span>
 <span class="n">da</span> <span class="o">=</span> <span class="n">cubo</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
-    <span class="n">lat</span><span class="o">=</span><span class="mf">4.31</span><span class="p">,</span> 
-    <span class="n">lon</span><span class="o">=-</span><span class="mf">76.2</span><span class="p">,</span> 
-    <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;sentinel-2-l2a&quot;</span><span class="p">,</span> 
-    <span class="n">bands</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B02&quot;</span><span class="p">,</span> <span class="s2">&quot;B03&quot;</span><span class="p">,</span> <span class="s2">&quot;B04&quot;</span><span class="p">,</span> <span class="s2">&quot;B05&quot;</span><span class="p">,</span> <span class="s2">&quot;B06&quot;</span><span class="p">,</span> <span class="s2">&quot;B07&quot;</span><span class="p">,</span> <span class="s2">&quot;B08&quot;</span><span class="p">,</span> <span class="s2">&quot;B8A&quot;</span><span class="p">,</span> <span class="s2">&quot;B11&quot;</span><span class="p">,</span> <span class="s2">&quot;B12&quot;</span><span class="p">],</span> 
-    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2021-06-01&quot;</span><span class="p">,</span> 
-    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2021-10-10&quot;</span><span class="p">,</span> 
-    <span class="n">edge_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> 
+    <span class="n">lat</span><span class="o">=</span><span class="mf">39.49152740347753</span><span class="p">,</span>
+    <span class="n">lon</span><span class="o">=-</span><span class="mf">0.4308725142800361</span><span class="p">,</span>
+    <span class="n">collection</span><span class="o">=</span><span class="s2">&quot;sentinel-2-l2a&quot;</span><span class="p">,</span>
+    <span class="n">bands</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B02&quot;</span><span class="p">,</span> <span class="s2">&quot;B03&quot;</span><span class="p">,</span> <span class="s2">&quot;B04&quot;</span><span class="p">,</span> <span class="s2">&quot;B05&quot;</span><span class="p">,</span> <span class="s2">&quot;B06&quot;</span><span class="p">,</span> <span class="s2">&quot;B07&quot;</span><span class="p">,</span> <span class="s2">&quot;B08&quot;</span><span class="p">,</span> <span class="s2">&quot;B8A&quot;</span><span class="p">,</span> <span class="s2">&quot;B11&quot;</span><span class="p">,</span> <span class="s2">&quot;B12&quot;</span><span class="p">],</span>
+    <span class="n">start_date</span><span class="o">=</span><span class="s2">&quot;2023-01-01&quot;</span><span class="p">,</span>
+    <span class="n">end_date</span><span class="o">=</span><span class="s2">&quot;2023-12-31&quot;</span><span class="p">,</span>
+    <span class="n">edge_size</span><span class="o">=</span><span class="mi">64</span><span class="p">,</span>
     <span class="n">resolution</span><span class="o">=</span><span class="mi">10</span>
 <span class="p">)</span>
 </code></pre></div>
@@ -631,7 +663,7 @@ Converting data to a PyTorch tensor ensures efficient computation and compatibil
 <span class="c1"># Create the tensor and move it to the appropriate device (CPU or GPU)</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">original_s2_numpy</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 </code></pre></div>
-<h4 id="default-model-setup"><strong>Default model setup</strong></h4>
+<h3 id="default-model-setup"><strong>Default model setup</strong></h3>
 <p>The default model is pre-trained for 2.5m resolution but supports 5m and 10m resolutions via the <code>resolution</code> parameter. It uses lightweight CNN architectures for super-resolution and fusion (<code>sr_model_snippet</code>, <code>fusionx2_model_snippet</code>, <code>fusionx4_model_snippet</code>). Models run on CPU or GPU, configurable via <code>device</code>. For more details on the architectures, refer to the <a href="#available-models">section</a>.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Set up the model</span>
 <span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
@@ -651,10 +683,10 @@ Converting data to a PyTorch tensor ensures efficient computation and compatibil
   <img src="assets/images/first_plot.png" width="100%">
 </p>
 
-<h3 id="configuring-the-spatial-resolution-enhancement-model"><strong>Configuring the Spatial Resolution Enhancement Model</strong></h3>
+<h3 id="configuring-model"><strong>Configuring Model</strong></h3>
 <p>In <strong>supers2</strong>, you can choose from several types of models to enhance the spatial resolution of Sentinel-2 images. Below are the configurations for each model type and their respective <a href="https://github.com/IPL-UV/supers2/releases/tag/v0.1.0">size options</a>. Each model is configured using <code>supers2.setmodel</code>, where the <code>sr_model_snippet</code> argument defines the super-resolution model, and <code>fusionx2_model_snippet</code> and <code>fusionx4_model_snippet</code> correspond to additional fusion models.</p>
-<h3 id="available-models"><strong>Available Models:</strong></h3>
-<h4 id="1-cnn-models"><strong>1. CNN Models</strong></h4>
+<h2 id="available-models"><strong>Available Models:</strong></h2>
+<h3 id="1-cnn-models"><strong>1. CNN Models</strong></h3>
 <p>CNN-based models are available in the following sizes: <code>lightweight</code>, <code>small</code>, <code>medium</code>, <code>expanded</code>, and <code>large</code>.</p>
 <p><div class="highlight"><pre><span></span><code><span class="c1"># Example configuration for a CNN model</span>
 <span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span>
@@ -676,7 +708,11 @@ Model size options (replace <code>small</code> with the desired size):</p>
 <li><code>expanded</code></li>
 <li><code>large</code></li>
 </ul>
-<h4 id="2-swin-models"><strong>2. SWIN Models</strong></h4>
+<p align="center">
+  <img src="assets/images/cnns_plot.png" width="100%">
+</p>
+
+<h3 id="2-swin-models"><strong>2. SWIN Models</strong></h3>
 <p>SWIN models are optimized for varying levels of detail and offer size options: <code>lightweight</code>, <code>small</code>, <code>medium</code>, and <code>expanded</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Example configuration for a SWIN model</span>
 <span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span>
@@ -694,7 +730,11 @@ Model size options (replace <code>small</code> with the desired size):</p>
 <li><code>medium</code></li>
 <li><code>expanded</code></li>
 </ul>
-<h4 id="3-mamba-models"><strong>3. MAMBA Models</strong></h4>
+<p align="center">
+  <img src="assets/images/swins_plot.png" width="100%">
+</p>
+
+<h3 id="3-mamba-models"><strong>3. MAMBA Models</strong></h3>
 <p>MAMBA models also come in various sizes, similar to SWIN and CNN: <code>lightweight</code>, <code>small</code>, <code>medium</code>, and <code>expanded</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Example configuration for a MAMBA model</span>
 <span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span>
@@ -712,7 +752,11 @@ Model size options (replace <code>small</code> with the desired size):</p>
 <li><code>medium</code></li>
 <li><code>expanded</code></li>
 </ul>
-<h4 id="4-diffusion-model"><strong>4. Diffusion Model</strong></h4>
+<p align="center">
+  <img src="assets/images/mambas_plot.png" width="100%">
+</p>
+
+<h3 id="4-diffusion-model"><strong>4. Diffusion Model</strong></h3>
 <p>The opensrdiffusion model is only available in the <code>large</code> size. This model is suited for deep resolution enhancement without additional configurations.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Configuration for the Diffusion model</span>
 <span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span>
@@ -723,23 +767,27 @@ Model size options (replace <code>small</code> with the desired size):</p>
     <span class="n">device</span><span class="o">=</span><span class="n">device</span>
 <span class="p">)</span>
 </code></pre></div>
-<h4 id="5-simple-models-bilinear-and-bicubic"><strong>5. Simple Models (Bilinear and Bicubic)</strong></h4>
+<h3 id="5-simple-models-bilinear-and-bicubic"><strong>5. Simple Models (Bilinear and Bicubic)</strong></h3>
 <p>For fast interpolation, bilinear and bicubic interpolation models can be used. These models do not require complex configurations and are useful for quick evaluations of enhanced resolution.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">supers2.models.simple</span> <span class="kn">import</span> <span class="n">BilinearSR</span><span class="p">,</span> <span class="n">BicubicSR</span>
 
 <span class="c1"># Bilinear Interpolation Model</span>
 <span class="n">bilinear_model</span> <span class="o">=</span> <span class="n">BilinearSR</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-<span class="n">super_bilinear</span> <span class="o">=</span> <span class="n">bilinear_model</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span>
+<span class="n">super_bilinear</span> <span class="o">=</span> <span class="n">bilinear_model</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 
 <span class="c1"># Bicubic Interpolation Model</span>
 <span class="n">bicubic_model</span> <span class="o">=</span> <span class="n">BicubicSR</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-<span class="n">super_bicubic</span> <span class="o">=</span> <span class="n">bicubic_model</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span>
+<span class="n">super_bicubic</span> <span class="o">=</span> <span class="n">bicubic_model</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
-<h3 id="apply-spatial-resolution-enhancement"><strong>Apply spatial resolution enhancement</strong></h3>
-<h3 id="predict-only-rgbnir-bands"><strong>Predict only RGBNIR bands</strong> 🌍</h3>
+<p align="center">
+  <img src="assets/images/bibi.png" width="100%">
+</p>
+
+<h2 id="apply-spatial-resolution-enhancement"><strong>Apply spatial resolution enhancement</strong></h2>
+<h2 id="predict-only-rgbnir-bands"><strong>Predict only RGBNIR bands</strong> 🌍</h2>
 <div class="highlight"><pre><span></span><code><span class="n">superX</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">predict_rgbnir</span><span class="p">(</span><span class="n">X</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">]])</span>
 </code></pre></div>
-<h3 id="estimate-the-uncertainty-of-the-model"><strong>Estimate the uncertainty of the model</strong> 📊</h3>
+<h2 id="estimate-the-uncertainty-of-the-model"><strong>Estimate the uncertainty of the model</strong> 📊</h2>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">supers2.trained_models</span> <span class="kn">import</span> <span class="n">SRmodels</span>
 
 <span class="c1"># Get the available models</span>
@@ -762,7 +810,7 @@ Model size options (replace <code>small</code> with the desired size):</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
 <p align="center">
-  <img src="https://raw.githubusercontent.com/IPL-UV/supers2/refs/heads/main/assets/images/example1.png" width="100%">
+  <img src="assets/images/mean.png" width="100%">
 </p>
 
 <h3 id="estimate-the-local-attention-map-of-the-model">Estimate the Local Attention Map of the model 📊</h3>
@@ -784,7 +832,7 @@ Model size options (replace <code>small</code> with the desired size):</p>
 <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;Robustness Vector&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
-<h3 id="use-the-opensr-test-and-supers2-to-analyze-the-hallucination-pixels">Use the opensr-test and supers2 to analyze the hallucination pixels 📊</h3>
+<h2 id="use-the-opensr-test-and-supers2-to-analyze-the-hallucination-pixels">Use the opensr-test and supers2 to analyze the hallucination pixels 📊</h2>
 
               
             </article>
