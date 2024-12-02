@@ -48,6 +48,12 @@ Install the latest version from PyPI:
 pip install supers2
 ```
 
+From GitHub:
+
+```bash
+pip install git+https://github.com/IPL-UV/supers2.git
+```
+
 ## **How to use** 🛠️
 
 ### **Load libraries**
@@ -55,7 +61,6 @@ pip install supers2
 ```python
 import matplotlib.pyplot as plt
 import numpy as np
-import supers2
 import torch
 import cubo
 
@@ -90,23 +95,33 @@ When converting the NumPy array to a PyTorch tensor, the use of `cuda()` is opti
 Here’s how you can handle both scenarios dynamically:
 
 ```python
+# Check if CUDA is available, use GPU if possible
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+```
+Converting data to a PyTorch tensor enables efficient computation, especially on GPUs, and ensures compatibility with the neural network. Scaling the data standardizes pixel values for better model performance.
+
+```python
 # Convert the data array to NumPy and scale
 original_s2_numpy = (da[11].compute().to_numpy() / 10_000).astype("float32")
 
-# Check if CUDA is available, use GPU if possible, otherwise fallback to CPU
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
 # Create the tensor and move it to the appropriate device (CPU or GPU)
 X = torch.from_numpy(original_s2_numpy).float().to(device)
+```
+#### **Default model setup**
+The default model is pre-trained for 2.5m resolution but supports 5m and 10m resolutions via the `resolution` parameter. It uses lightweight CNN architectures for super-resolution and fusion (`sr_model_snippet`, `fusionx2_model_snippet`, `fusionx4_model_snippet`). Models run on CPU or GPU, configurable via `device`.
 
+```python
 # Set up the model to enhance the spatial resolution
 models = supers2.setmodel(device=device)
 
 # Apply spatial resolution enhancement
 superX = supers2.predict(X, models=models, resolution="2.5m")
+```
+#### **Plot explanation**
 
-# Visualize the results
-# Plot the original and enhanced-resolution images
+The first plot shows the original Sentinel-2 RGB image (10m resolution). The second plot displays the enhanced version with finer spatial details (2.5m resolution) using a lightweight CNN.
+
+```python
 fig, ax = plt.subplots(1, 2, figsize=(10, 5))
 ax[0].imshow(X[[2, 1, 0]].permute(1, 2, 0).cpu().numpy()*4)
 ax[0].set_title("Original S2")
