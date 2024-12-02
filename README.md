@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-   <em>A Python package for enhancing the spatial resolution of Sentinel-2 satellite images to 2.5 meters</em> 🚀
+   <em>A Python package for enhancing the spatial resolution of Sentinel-2 satellite images up to 2.5 meters</em> 🚀
 </p>
 
 
@@ -38,35 +38,28 @@
 
 ## **Overview** 📊
 
-**supers2** is a Python package designed to enhance the spatial resolution of Sentinel-2 satellite images to 2.5 meters using advanced neural network models. It facilitates downloading (cubo package), preparing, and processing the Sentinel-2 data and applies deep learning models to enhance the spatial resolution of the imagery.
+**supers2** is a Python package designed to enhance the spatial resolution of Sentinel-2 satellite images to 2.5 meters using a set of neural network models. 
 
 ## **Installation** ⚙️
 
 Install the latest version from PyPI:
 
 ```bash
-pip install cubo supers2
+pip install supers2
 ```
 
 ## **How to use** 🛠️
 
 ### **Basic usage: enhancing spatial resolution of Sentinel-2 images** 🌍
 
-#### **Load libraries**
-
 ```python
-import cubo
+import matplotlib.pyplot as plt
 import numpy as np
-import torch
-
 import supers2
+import torch
+import cubo
 
-```
-
-#### **Download Sentinel-2 L2A cube**
-
-```python
-# Create a Sentinel-2 L2A data cube for a specific location and date range
+## Download Sentinel-2 L2A cube
 da = cubo.create(
     lat=4.31, 
     lon=-76.2, 
@@ -77,19 +70,7 @@ da = cubo.create(
     edge_size=128, 
     resolution=10
 )
-```
 
-#### **Prepare the data (CPU and GPU usage)**
-
-When converting the NumPy array to a PyTorch tensor, the use of `cuda()` is optional and depends on whether the user has access to a GPU. Below is the explanation for both cases:
-
-- **GPU:** If a GPU is available and CUDA is installed, you can transfer the tensor to the GPU using `.cuda()`. This improves the processing speed, especially for large datasets or deep learning models.
-
-- **CPU:** If no GPU is available, the tensor will be processed on the CPU, which is the default behavior in PyTorch. In this case, simply omit the `.cuda()` call.
-
-Here’s how you can handle both scenarios dynamically:
-
-```python
 # Convert the data array to NumPy and scale
 original_s2_numpy = (da[11].compute().to_numpy() / 10_000).astype("float32")
 
@@ -98,33 +79,14 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Create the tensor and move it to the appropriate device (CPU or GPU)
 X = torch.from_numpy(original_s2_numpy).float().to(device)
-```
 
-#### **Define the resolution enhancement model**
-```python
 # Set up the model to enhance the spatial resolution
-models = supers2.setmodel(
-    SR_model_loss="l1", 
-    SR_model_name="cnn", 
-    SR_model_size="small", 
-    Fusionx2_model_size="lightweight", 
-    Fusionx4_model_size="lightweight"
-)
-```
-### **Apply spatial resolution enhancement**
+models = supers2.setmodel(device=device)
 
-```python
-# Apply the model to enhance the image resolution to 2.5 meters
+# Apply spatial resolution enhancement
 superX = supers2.predict(X, models=models, resolution="2.5m")
-```
 
-### **Visualize the results** 🎨
-
-#### **Display images**
-
-```python
-import matplotlib.pyplot as plt
-
+# Visualize the results
 # Plot the original and enhanced-resolution images
 fig, ax = plt.subplots(1, 2, figsize=(10, 5))
 ax[0].imshow(X[[2, 1, 0]].permute(1, 2, 0).cpu().numpy()*4)
@@ -138,8 +100,80 @@ plt.show()
   <img src="./assets/images/example1.png" width="100%">
 </p>
 
-## **Supported features and filters** ✨
 
-- **Enhance spatial resolution to 2.5 meters:** Use advanced CNN models to enhance Sentinel-2 imagery.
-- **Neural network-based approach:** Integration of multiple model sizes to fit different computing needs (small, lightweight).
-- **Python integration:** Easily interact with data cubes through the Python API, supporting seamless workflows.
+## Chante the model settings 🛠️
+
+At the end of the document, you can find a table with the available models and their characteristics.
+
+```python
+# Set up the model to enhance the spatial resolution
+models = supers2.setmodel(
+    resolution = "2.5m", # Set the desired resolution
+    sr_model_snippet = "sr__opensrbaseline__cnn__medium__l1", # RGBN model from 10m to 2.5m
+    fusionx2_model_snippet = "fusionx2__opensrbaseline__cnn__large__l1", # RedESWIR model from 20m to 10m
+    fusionx4_model_snippet = "fusionx4__opensrbaseline__cnn__large__l1", #RedESWIR model from 10m to 2.5m
+    weights_path = None, # Path to the weights file
+    device = "cpu" # Use the CPU
+)
+
+# Apply spatial resolution enhancement
+superX = supers2.predict(X, models=models, resolution="2.5m")
+```
+
+### **Predict only RGBNIR bands** 🌍
+
+```python
+superX = supers2.predict_rgbnir(X[[2, 1, 0, 6]])
+```
+
+### **Estimate the uncertainty of the model** 📊
+
+```python
+from supers2.trained_models import SRmodels
+
+# Get the available models
+models = list(SRmodels.model_dump()["object"].keys())
+
+# Get only swin transformer models
+swin2sr_models = [model for model in models if "swin" in model]
+
+map_mean, map_std = supers2.uncertainty(
+    X[[2, 1, 0, 6]],
+    models=swin2sr_models
+)
+
+# Visualize the uncertainty
+fig, ax = plt.subplots(1, 2, figsize=(10, 5))
+ax[0].imshow(mean_map[0:3].cpu().numpy().transpose(1, 2, 0)*3)
+ax[0].set_title("Mean")
+ax[1].imshow(std_map[0:3].cpu().numpy().transpose(1, 2, 0)*100)
+ax[1].set_title("Standard Deviation")
+plt.show()
+```
+
+
+### Estimate the Local Attention Map of the model 📊
+
+
+```python
+kde_map, complexity_metric, robustness_metric, robustness_vector = supers2.lam(
+    X=X[[2, 1, 0, 6]].cpu(), # The input tensor
+    model=models.srx4, # The SR model
+    h=240, # The height of the window
+    w=240, # The width of the window
+    window=128, # The window size
+    scales = ["1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x"]
+)
+
+# Visualize the results
+plt.imshow(kde_map)
+plt.title("Kernel Density Estimation")
+plt.show()
+
+plt.plot(robustness_vector)
+plt.title("Robustness Vector")
+plt.show()
+```
+
+
+### Use the opensr-test and supers2 to analyze the hallucination pixels 📊

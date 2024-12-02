@@ -1,183 +1,11 @@
-from typing import Optional
+from typing import Optional, Tuple
 
 import numpy as np
 import torch
 import torch.nn.functional as F
+from tqdm import tqdm
 
 from supers2.xai.utils import gini, vis_saliency_kde
-
-
-def GaussianBlurPath(sigma: float, fold: int, kernel_size: int = 5):
-    """
-    Generates a function for applying a Gaussian blur path to an image using PyTorch.
-    The function applies progressively weaker Gaussian blurs to an image and calculates
-    interpolations between each blurred image, along with derivatives for each step.
-
-    Args:
-        sigma (float): Initial standard deviation for the Gaussian blur.
-        fold (int): Number of interpolation steps for the blurring path.
-        kernel_size (int, optional): Size of the Gaussian kernel. Defaults to 5.
-
-    Returns:
-        Callable: A function that takes an image and returns a tuple:
-            - image_interpolation (torch.Tensor): Interpolated blurred images.
-            - lambda_derivative_interpolation (torch.Tensor): Derivatives of interpolated images.
-    """
-
-    def path_interpolation_func(torch_image: torch.Tensor):
-        """
-        Applies the Gaussian blur path to the input image and computes the interpolated images
-        and their derivatives using PyTorch.
-
-        Args:
-            torch_image (torch.Tensor): Input image as a torch tensor (channels, height, width).
-
-        Returns:
-            tuple: Interpolated blurred images and their derivatives along the Gaussian path.
-        """
-        device = torch_image.device
-
-        # Ensure image is 4D (batch, channels, height, width)
-        torch_image = torch_image.unsqueeze(0) if torch_image.ndim == 3 else torch_image
-        torch_image = torch_image.to(device)
-        channels = torch_image.shape[1]
-
-        # Initialize tensors for blurred images and derivatives
-        image_interpolation = torch.zeros(
-            (fold, *torch_image.shape[1:]), dtype=torch.float32
-        )
-        image_interpolation = image_interpolation.to(device)
-        lambda_derivative_interpolation = torch.zeros_like(image_interpolation)
-        lambda_derivative_interpolation = lambda_derivative_interpolation.to(device)
-        kernel_interpolation = torch.zeros(
-            (fold + 1, channels, kernel_size, kernel_size), dtype=torch.float32
-        )
-        kernel_interpolation = kernel_interpolation.to(device)
-
-        # Linearly interpolate sigma values from initial to zero
-        sigma_interpolation = np.linspace(sigma, 0, fold + 1)
-
-        # Create Gaussian kernels for each sigma value
-        for i in range(fold + 1):
-            kernel_interpolation[i] = isotropic_gaussian_kernel_torch(
-                kernel_size, sigma_interpolation[i]
-            ).squeeze()
-
-        # Calculate padding size
-        pad_size = kernel_interpolation.shape[-1] // 2
-
-        # Create Gaussian kernels for each sigma and apply to image
-        for i in range(fold):
-            # Apply reflect padding first
-            padded_image = F.pad(
-                torch_image, (pad_size, pad_size, pad_size, pad_size), mode="reflect"
-            )
-
-            # Store the current blurred image
-            image_interpolation[i] = F.conv2d(
-                padded_image, kernel_interpolation[i + 1][:, None], groups=channels
-            ).squeeze(0)
-
-            # Calculate derivative with respect to lambda
-            diff_kernel = (kernel_interpolation[i + 1] - kernel_interpolation[i])[
-                :, None
-            ] * fold
-            lambda_derivative_interpolation[i] = F.conv2d(
-                padded_image, diff_kernel, groups=channels
-            ).squeeze(0)
-
-        return (
-            image_interpolation,
-            lambda_derivative_interpolation,
-            kernel_interpolation,
-        )
-
-    return path_interpolation_func
-
-
-def isotropic_gaussian_kernel_torch(
-    size: int, sigma: float, epsilon: float = 1e-5
-) -> torch.Tensor:
-    """
-    Generates an isotropic Gaussian kernel in PyTorch.
-
-    Args:
-        size (int): Size of the kernel (size x size).
-        sigma (float): Standard deviation of the Gaussian distribution.
-        epsilon (float, optional): Small constant to avoid division by zero. Defaults to 1e-5.
-
-    Returns:
-        torch.Tensor: Normalized Gaussian kernel.
-    """
-    ax = torch.arange(-size // 2 + 1.0, size // 2 + 1.0)
-    xx, yy = torch.meshgrid(ax, ax, indexing="ij")
-
-    # Calculate Gaussian function and normalize
-    kernel = torch.exp(-(xx**2 + yy**2) / (2.0 * (sigma + epsilon) ** 2))
-    kernel = kernel / kernel.sum()
-
-    # Reshape for 2D convolution (out_channels, in_channels, height, width)
-    return kernel.unsqueeze(0).unsqueeze(0)
-
-
-def Path_gradient(
-    image: torch.Tensor,
-    model: torch.nn.Module,
-    attr_objective: callable,
-    path_interpolation_func: callable,
-):
-    """
-    Computes the path gradient for an image using a specified model and attribution objective.
-    The function calculates gradients for a series of interpolated images produced by a path
-    interpolation function.
-
-    Args:
-        numpy_image (np.ndarray): Input image of shape (channels, height, width).
-        model (torch.nn.Module): The model to compute the objective on.
-        attr_objective (callable): Function defining the attribution objective for the model output.
-        path_interpolation_func (callable): Function that generates interpolated images and
-            their lambda derivatives along a defined path.
-
-    Returns:
-        tuple:
-            - grad_accumulate_list (np.ndarray): Accumulated gradients for each interpolated image.
-            - results_numpy (np.ndarray): Model outputs for each interpolated image.
-            - image_interpolation (np.ndarray): Interpolated images created by `path_interpolation_func`.
-    """
-
-    # Prepare image for interpolation and initialize gradient accumulation array
-    image_interpolation, lambda_derivative_interpolation, _ = path_interpolation_func(
-        image
-    )
-
-    grad_accumulate_list = torch.zeros_like(image_interpolation).cpu().numpy()
-    result_list = []
-
-    # Compute gradient for each interpolated image
-    for i in range(image_interpolation.shape[0]):
-
-        # Convert interpolated image to tensor and set requires_grad for backpropagation
-        img_tensor = image_interpolation[i].float()[None]
-        img_tensor.requires_grad_(True)
-
-        # Forward pass through the model and compute attribution objective
-        result = model(img_tensor)
-        target = attr_objective(result)
-        target.backward()  # Compute gradients
-
-        # Extract gradient, handling NaNs if present
-        grad = img_tensor.grad.cpu().numpy()
-        grad = np.nan_to_num(grad)  # Replace NaNs with 0
-
-        # Accumulate gradients adjusted by lambda derivatives
-        grad_accumulate_list[i] = (
-            grad * lambda_derivative_interpolation[i].cpu().numpy()
-        )
-        result_list.append(result.detach().cpu().numpy())
-
-    # Collect results and return final outputs
-    results_numpy = np.array(result_list)
-    return grad_accumulate_list, results_numpy, image_interpolation
 
 
 def attribution_objective(attr_func, h: int, w: int, window: int = 16):
@@ -258,72 +86,118 @@ def attr_grad(
     else:
         raise ValueError(f"Invalid reduction type: {reduce}. Use 'sum' or 'mean'.")
 
-
-def lam(
-    X: torch.Tensor,
-    model: torch.nn.Module,
-    h: Optional[int] = 240,
-    w: Optional[int] = 240,
-    window: Optional[int] = 32,
-    fold: Optional[int] = 25,
-    kernel_size: Optional[int] = 13,
-    sigma: Optional[float] = 3.5,
-    robustness_metric: Optional[str] = True
-):
-    """
-    Computes the Local Attribution Map (LAM) for an input tensor using 
-    a specified model and attribution function. The function calculates
-    the path gradient for each band in the input tensor and combines the
-    results to generate the LAM.
+def down_up(X: torch.Tensor, scale_factor: float=0.5) -> torch.Tensor:
+    """Downsample and upsample an image using bilinear interpolation.
 
     Args:
-        X (torch.Tensor): Input tensor of shape (channels, height, width).
-        model (torch.nn.Module): The model to compute the objective on.
-        attr_func (callable): Function that calculates attributions for an image.
-        h (int): The top coordinate of the window within the image.
-        w (int): The left coordinate of the window within the image.
-        window (int, optional): The size of the square window. Defaults to 16.
-        fold (int, optional): Number of interpolation steps for the blurring path.
-            Defaults to 10.
-        kernel_size (int, optional): Size of the Gaussian kernel. Defaults to 5.
-        sigma (float, optional): Initial standard deviation for the Gaussian blur.
-            Defaults to 3.5.
-        robustness_metric (bool, optional): Whether to return the robustness metric.
-            Defaults to True.
+        X (torch.Tensor): The input tensor (Bands x Height x Width).
+        scale_factor (float, optional): The scaling factor. Defaults to 0.5.
 
     Returns:
-        tuple: A tuple containing the following elements:
-            - kde_map (np.ndarray): KDE estimation of the LAM.
-            - complexity_metric (float): Gini index of the LAM that 
-                measures the consistency of the attribution. The 
-                larger the value, the more use more complex attribution
-                patterns to solve the task.
-            - robustness_metric (np.ndarray): Blurriness sensitivity of the LAM.
-                The sensitivity measures the average gradient magnitude of the
-                interpolated images.
-            - robustness_vector (np.ndarray): Vector of gradient magnitudes for
-                each interpolated image.
+        torch.Tensor: The downsampled and upsampled image.
+    """
+    shape_init = X.shape
+    return torch.nn.functional.interpolate(
+        input=torch.nn.functional.interpolate(
+            input=X,
+            scale_factor=1/scale_factor,
+            mode="bilinear",
+            antialias=True
+        ),
+        size=shape_init[2:],
+        mode="bilinear",
+        antialias=True
+    )
+
+def create_blur_cube(X: torch.Tensor, scales: list) -> torch.Tensor:
+    """Create a cube of blurred images at different scales.
+
+    Args:
+        X (torch.Tensor): The input tensor (Bands x Height x Width).
+        scales (list): The scales to evaluate.
+
+    Returns:
+        torch.Tensor: The cube of blurred images.
+    """
+    scales_int = [float(scale[:-1]) for scale in scales]
+    return torch.stack([down_up(X[None], scale) for scale in scales_int]).squeeze()
+
+
+def create_lam_inputs(
+    X: torch.Tensor,
+    scales: list
+) -> Tuple[torch.Tensor, torch.Tensor, list]:
+    """Create the inputs for the Local Attribution Map (LAM).
+
+    Args:
+        X (torch.Tensor): The input tensor (Bands x Height x Width).
+        scales (list): The scales to evaluate.
+
+    Returns:
+        Tuple[torch.Tensor, torch.Tensor, list]: The cube of blurred
+            images, the difference between the input and the cube, 
+            and the scales.
+    """
+    cube = create_blur_cube(X, scales)
+    diff = torch.abs(X[None] - cube)
+    return cube[1:], diff[1:], scales[1:]
+
+
+def lam(
+    X: torch.Tensor,    
+    model: torch.nn.Module,
+    model_scale: float = 4,
+    h: int = 240,
+    w: int = 240,
+    window: int = 32,
+    scales: list = ["1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x"]
+) -> Tuple[np.ndarray, float, float, np.ndarray]:
+    """ Estimate the Local Attribution Map (LAM)
+
+    Args:
+        X (torch.Tensor): The input tensor (Bands x Height x Width).
+        model (torch.nn.Module): The model to evaluate.
+        model_scale (float, optional): The scale of the model. Defaults to 4.
+        h (int, optional): The height of the window to evaluate. Defaults to 240.
+        w (int, optional): The width of the window to evaluate. Defaults to 240.
+        window (int, optional): The window size. Defaults to 32.
+        scales (list, optional): The scales to evaluate. Defaults to 
+            ["1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x"].
+
+    Returns:
+        Tuple[np.ndarray, float, float, np.ndarray]: _description_
     """
 
-    # Get the scale of the results
-    with torch.no_grad():
-        output = model(X[None])
-        scale = output.shape[-1] // X.shape[-1]
-
-    # Create the path interpolation function
-    path_interpolation_func = GaussianBlurPath(
-        sigma=sigma, fold=fold, kernel_size=kernel_size
-    )
-    # a, b, c = path_interpolation_func(X)
+    # Create the LAM inputs
+    cube, diff, scales = create_lam_inputs(X, scales)
 
     # Create the attribution objective function
     attr_objective = attribution_objective(attr_grad, h, w, window=window)
 
-    # Compute the path gradient for the input tensor
-    grad_accumulate_list,results_numpy, image_interpolation = Path_gradient(
-        X, model, attr_objective, path_interpolation_func
-    )
-    
+    # Initialize the gradient accumulation list
+    grad_accumulate_list = torch.zeros_like(cube).cpu().numpy()
+
+    # Compute gradient for each interpolated image
+    for i in tqdm(range(cube.shape[0]), desc="Computing gradients"):
+        
+        # Convert interpolated image to tensor and set requires_grad for backpropagation
+        img_tensor = cube[i].float()[None]
+        img_tensor.requires_grad_(True)
+
+        # Forward pass through the model and compute attribution objective
+        result = model(img_tensor)
+        target = attr_objective(result)
+        target.backward()  # Compute gradients
+
+        # Extract gradient, handling NaNs if present
+        grad = img_tensor.grad.cpu().numpy()
+        grad = np.nan_to_num(grad)  # Replace NaNs with 0
+
+        # Accumulate gradients adjusted by lambda derivatives
+        grad_accumulate_list[i] = (
+            grad * diff[i].cpu().numpy()
+        )
+
     # Sum the accumulated gradients across all bands
     lam_results = torch.sum(torch.from_numpy(np.abs(grad_accumulate_list)), dim=0)
     grad_2d = np.abs(lam_results.sum(axis=0))
@@ -333,9 +207,12 @@ def lam(
     # Estimate gini index
     gini_index = gini(grad_norm.flatten())
 
+    ## window to image size
+    #ratio_img_to_window = (X.shape[1] * model_scale) // window
+
     # KDE estimation
-    kde_map = vis_saliency_kde(grad_norm, scale=scale, bandwidth=1.0)
-    complexity_metric = (1 - gini_index) * 100
+    kde_map = vis_saliency_kde(grad_norm, scale=model_scale, bandwidth=1.0)
+    complexity_metric = (1 - gini_index) * 100 # / ratio_img_to_window
 
     # Estimate blurriness sensitivity
     robustness_vector = np.abs(grad_accumulate_list).mean(axis=(1, 2, 3))

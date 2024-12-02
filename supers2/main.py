@@ -8,9 +8,8 @@ import tqdm
 
 from supers2.dataclass import SRexperiment
 from supers2.setup import load_model
-from supers2.utils import define_iteration
+from supers2.utils import define_iteration, gdal_create
 from supers2.trained_models import SRmodels
-
 
 def setmodel(
     resolution: Literal["2.5m", "5m", "10m"] = "2.5m",
@@ -282,11 +281,7 @@ def predict_large(
     
     # Create the output image
     with rio.open(output_fullname, "w", **output_metadata) as dst:
-        data_np = np.zeros(
-            (metadata["count"], metadata["height"] * res_n, metadata["width"] * res_n),
-            dtype=np.uint16,
-        )
-        dst.write(data_np)
+        pass
     
     # Check if the models are loaded
     if models is None:
@@ -295,8 +290,7 @@ def predict_large(
     # Iterate over the image
     with rio.open(output_fullname, "r+") as dst:
         with rio.open(image_fullname) as src:
-            for index, point in enumerate(tqdm.tqdm(nruns)):
-
+            for index, point in enumerate(tqdm.tqdm(nruns)):                
                 # Read a block of the image
                 window = rio.windows.Window(point[1], point[0], 128, 128)
                 X = torch.from_numpy(src.read(window=window)).float().to(device)
@@ -431,7 +425,7 @@ def uncertainty(
         )
 
         # Run the model
-        X_torch = torch.from_numpy((X / 10_000)).float().to(device)
+        X_torch = X.float().to(device)
         prediction = model_object(X_torch[None]).squeeze().cpu()
         
         # Store the prediction
