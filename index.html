@@ -432,13 +432,6 @@
   
 </li>
         
-          <li class="md-nav__item">
-  <a href="#plot-explanation" class="md-nav__link">
-    Plot explanation
-  </a>
-  
-</li>
-        
       </ul>
     </nav>
   
@@ -620,18 +613,18 @@
 <span class="p">)</span>
 </code></pre></div>
 <h3 id="prepare-the-data-cpu-and-gpu-usage"><strong>Prepare the data (CPU and GPU usage)</strong></h3>
-<p>When converting the NumPy array to a PyTorch tensor, the use of <code>cuda()</code> is optional and depends on whether the user has access to a GPU. Below is the explanation for both cases:</p>
+<p>When converting a NumPy array to a PyTorch tensor:</p>
 <ul>
-<li><strong>GPU:</strong> If a GPU is available and CUDA is installed, you can transfer the tensor to the GPU using <code>.cuda()</code>. This improves the processing speed, especially for large datasets or deep learning models.</li>
+<li><strong>GPU:</strong> Use <code>.cuda()</code> to transfer the tensor to the GPU if available, improving speed for large datasets or models.</li>
 </ul>
 <ul>
-<li><strong>CPU:</strong> If no GPU is available, the tensor will be processed on the CPU, which is the default behavior in PyTorch. In this case, simply omit the <code>.cuda()</code> call.</li>
+<li><strong>CPU:</strong> If no GPU is available, PyTorch defaults to the CPU; omit .<code>.cuda()</code>.</li>
 </ul>
 <p>Here’s how you can handle both scenarios dynamically:</p>
 <p><div class="highlight"><pre><span></span><code><span class="c1"># Check if CUDA is available, use GPU if possible</span>
 <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 </code></pre></div>
-Converting data to a PyTorch tensor enables efficient computation, especially on GPUs, and ensures compatibility with the neural network. Scaling the data standardizes pixel values for better model performance.</p>
+Converting data to a PyTorch tensor ensures efficient computation and compatibility, while scaling standardizes pixel values to improve performance.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Convert the data array to NumPy and scale</span>
 <span class="n">original_s2_numpy</span> <span class="o">=</span> <span class="p">(</span><span class="n">da</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">/</span> <span class="mi">10_000</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
 
@@ -639,14 +632,13 @@ Converting data to a PyTorch tensor enables efficient computation, especially on
 <span class="n">X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">original_s2_numpy</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 </code></pre></div>
 <h4 id="default-model-setup"><strong>Default model setup</strong></h4>
-<p>The default model is pre-trained for 2.5m resolution but supports 5m and 10m resolutions via the <code>resolution</code> parameter. It uses lightweight CNN architectures for super-resolution and fusion (<code>sr_model_snippet</code>, <code>fusionx2_model_snippet</code>, <code>fusionx4_model_snippet</code>). Models run on CPU or GPU, configurable via <code>device</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Set up the model to enhance the spatial resolution</span>
+<p>The default model is pre-trained for 2.5m resolution but supports 5m and 10m resolutions via the <code>resolution</code> parameter. It uses lightweight CNN architectures for super-resolution and fusion (<code>sr_model_snippet</code>, <code>fusionx2_model_snippet</code>, <code>fusionx4_model_snippet</code>). Models run on CPU or GPU, configurable via <code>device</code>. For more details on the architectures, refer to the <a href="#available-models">section</a>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Set up the model</span>
 <span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
 
-<span class="c1"># Apply spatial resolution enhancement</span>
+<span class="c1"># Apply model</span>
 <span class="n">superX</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">models</span><span class="o">=</span><span class="n">models</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="s2">&quot;2.5m&quot;</span><span class="p">)</span>
 </code></pre></div>
-<h4 id="plot-explanation"><strong>Plot explanation</strong></h4>
 <p>The first plot shows the original Sentinel-2 RGB image (10m resolution). The second plot displays the enhanced version with finer spatial details (2.5m resolution) using a lightweight CNN.</p>
 <div class="highlight"><pre><span></span><code><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">X</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
@@ -655,6 +647,10 @@ Converting data to a PyTorch tensor enables efficient computation, especially on
 <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Enhanced Resolution S2&quot;</span><span class="p">)</span>
 <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 </code></pre></div>
+<p align="center">
+  <img src="assets/images/first_plot.png" width="100%">
+</p>
+
 <h3 id="configuring-the-spatial-resolution-enhancement-model"><strong>Configuring the Spatial Resolution Enhancement Model</strong></h3>
 <p>In <strong>supers2</strong>, you can choose from several types of models to enhance the spatial resolution of Sentinel-2 images. Below are the configurations for each model type and their respective <a href="https://github.com/IPL-UV/supers2/releases/tag/v0.1.0">size options</a>. Each model is configured using <code>supers2.setmodel</code>, where the <code>sr_model_snippet</code> argument defines the super-resolution model, and <code>fusionx2_model_snippet</code> and <code>fusionx4_model_snippet</code> correspond to additional fusion models.</p>
 <h3 id="available-models"><strong>Available Models:</strong></h3>
