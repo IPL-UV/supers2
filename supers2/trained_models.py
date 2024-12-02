@@ -187,7 +187,7 @@ SRmodels = AvailableModels(
             srclass="supers2.models.opensr_baseline.mamba.MambaSR",
         ),
         "sr__opensrdiffusion__large__l1": AvailableModel(
-            parameters={},
+            parameters={"upscale": 4},
             srclass="supers2.models.opensr_diffusion.main.SRmodel",
         ),
         # Zero-parameter Models
