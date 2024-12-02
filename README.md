@@ -1,7 +1,7 @@
 # 
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/IPL-UV/supers2/refs/heads/main/assets/images/banner_supers2.png" width="50%">
+  <img src="assets/images/logo_ss2.png" width="30%">
 </p>
 
 <p align="center">

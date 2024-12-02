@@ -32,8 +32,8 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-  logo: https://raw.githubusercontent.com/IPL-UV/supers2/refs/heads/main/assets/images/logo_circular_sr.png
-  favicon: https://raw.githubusercontent.com/IPL-UV/supers2/refs/heads/main/assets/images/logo_circular_sr.png
+  logo: assets/images/logo_ss2.png
+  favicon: assets/images/logo_ss2.png
   features:
     - navigation.instant
     - navigation.tabs
@@ -49,23 +49,6 @@ nav:
     - Contributing: CONTRIBUTING.md
     - Changelog: CHANGELOG.md
     - Code of conduct: CODE_OF_CONDUCT.md
-  # - Functions: 
-  #   - ./docs/FUNCTIONS.md
-  #   - Query metadata: ./docs/Functions/query_metadata.md
-  #   - Process Image: ./docs/Functions/process_image.md
-  #   - Download Data: ./docs/Functions/download_data.md
-  # - Processes: 
-  #   - ./docs/PROCESSES.md
-  #   - Recursion: ./docs/Process/recursion.md
-  #   - Concurrency: ./docs/Process/concurrency.md
-  #   - Parallelism: ./docs/Process/parallelism.md
-  #   - Difference: ./docs/Process/difference.md
-  # - Comparation:
-  #   - ./docs/COMPARATION.md
-  #   - Get: ./docs/Comparation/eedatagetPixels.md
-  #   - Compute: ./docs/Comparation/eedatacomputePixels.md
-  #   - Comparison: ./docs/Comparation/comparison.md
-  #   - Conclusion: ./docs/Comparation/conclusion.md
 
 # Plugins
 plugins:
