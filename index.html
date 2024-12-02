@@ -418,6 +418,33 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#prepare-the-data-cpu-and-gpu-usage" class="md-nav__link">
+    Prepare the data (CPU and GPU usage)
+  </a>
+  
+    <nav class="md-nav" aria-label="Prepare the data (CPU and GPU usage)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#default-model-setup" class="md-nav__link">
+    Default model setup
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#plot-explanation" class="md-nav__link">
+    Plot explanation
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#configuring-the-spatial-resolution-enhancement-model" class="md-nav__link">
     Configuring the Spatial Resolution Enhancement Model
   </a>
@@ -567,11 +594,13 @@
 <p>Install the latest version from PyPI:</p>
 <div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>supers2
 </code></pre></div>
+<p>From GitHub:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/IPL-UV/supers2.git
+</code></pre></div>
 <h2 id="how-to-use"><strong>How to use</strong> 🛠️</h2>
 <h3 id="load-libraries"><strong>Load libraries</strong></h3>
 <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
 <span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">supers2</span>
 <span class="kn">import</span> <span class="nn">torch</span>
 <span class="kn">import</span> <span class="nn">cubo</span>
 
@@ -589,36 +618,37 @@
     <span class="n">edge_size</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> 
     <span class="n">resolution</span><span class="o">=</span><span class="mi">10</span>
 <span class="p">)</span>
-
-<span class="c1">### **Prepare the data (CPU and GPU usage)**</span>
-
-<span class="n">When</span> <span class="n">converting</span> <span class="n">the</span> <span class="n">NumPy</span> <span class="n">array</span> <span class="n">to</span> <span class="n">a</span> <span class="n">PyTorch</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">the</span> <span class="n">use</span> <span class="n">of</span> <span class="err">`</span><span class="n">cuda</span><span class="p">()</span><span class="err">`</span> <span class="ow">is</span> <span class="n">optional</span> <span class="ow">and</span> <span class="n">depends</span> <span class="n">on</span> <span class="n">whether</span> <span class="n">the</span> <span class="n">user</span> <span class="n">has</span> <span class="n">access</span> <span class="n">to</span> <span class="n">a</span> <span class="n">GPU</span><span class="o">.</span> <span class="n">Below</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">explanation</span> <span class="k">for</span> <span class="n">both</span> <span class="n">cases</span><span class="p">:</span>
-
-<span class="o">-</span> <span class="o">**</span><span class="n">GPU</span><span class="p">:</span><span class="o">**</span> <span class="n">If</span> <span class="n">a</span> <span class="n">GPU</span> <span class="ow">is</span> <span class="n">available</span> <span class="ow">and</span> <span class="n">CUDA</span> <span class="ow">is</span> <span class="n">installed</span><span class="p">,</span> <span class="n">you</span> <span class="n">can</span> <span class="n">transfer</span> <span class="n">the</span> <span class="n">tensor</span> <span class="n">to</span> <span class="n">the</span> <span class="n">GPU</span> <span class="n">using</span> <span class="err">`</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span><span class="err">`</span><span class="o">.</span> <span class="n">This</span> <span class="n">improves</span> <span class="n">the</span> <span class="n">processing</span> <span class="n">speed</span><span class="p">,</span> <span class="n">especially</span> <span class="k">for</span> <span class="n">large</span> <span class="n">datasets</span> <span class="ow">or</span> <span class="n">deep</span> <span class="n">learning</span> <span class="n">models</span><span class="o">.</span>
-
-<span class="o">-</span> <span class="o">**</span><span class="n">CPU</span><span class="p">:</span><span class="o">**</span> <span class="n">If</span> <span class="n">no</span> <span class="n">GPU</span> <span class="ow">is</span> <span class="n">available</span><span class="p">,</span> <span class="n">the</span> <span class="n">tensor</span> <span class="n">will</span> <span class="n">be</span> <span class="n">processed</span> <span class="n">on</span> <span class="n">the</span> <span class="n">CPU</span><span class="p">,</span> <span class="n">which</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">default</span> <span class="n">behavior</span> <span class="ow">in</span> <span class="n">PyTorch</span><span class="o">.</span> <span class="n">In</span> <span class="n">this</span> <span class="n">case</span><span class="p">,</span> <span class="n">simply</span> <span class="n">omit</span> <span class="n">the</span> <span class="err">`</span><span class="o">.</span><span class="n">cuda</span><span class="p">()</span><span class="err">`</span> <span class="n">call</span><span class="o">.</span>
-
-<span class="n">Here</span><span class="err">’</span><span class="n">s</span> <span class="n">how</span> <span class="n">you</span> <span class="n">can</span> <span class="n">handle</span> <span class="n">both</span> <span class="n">scenarios</span> <span class="n">dynamically</span><span class="p">:</span>
-
-<span class="err">```</span><span class="n">python</span>
-<span class="c1"># Convert the data array to NumPy and scale</span>
-<span class="n">original_s2_numpy</span> <span class="o">=</span> <span class="p">(</span><span class="n">da</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">/</span> <span class="mi">10_000</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
-
-<span class="c1"># Check if CUDA is available, use GPU if possible, otherwise fallback to CPU</span>
+</code></pre></div>
+<h3 id="prepare-the-data-cpu-and-gpu-usage"><strong>Prepare the data (CPU and GPU usage)</strong></h3>
+<p>When converting the NumPy array to a PyTorch tensor, the use of <code>cuda()</code> is optional and depends on whether the user has access to a GPU. Below is the explanation for both cases:</p>
+<ul>
+<li><strong>GPU:</strong> If a GPU is available and CUDA is installed, you can transfer the tensor to the GPU using <code>.cuda()</code>. This improves the processing speed, especially for large datasets or deep learning models.</li>
+</ul>
+<ul>
+<li><strong>CPU:</strong> If no GPU is available, the tensor will be processed on the CPU, which is the default behavior in PyTorch. In this case, simply omit the <code>.cuda()</code> call.</li>
+</ul>
+<p>Here’s how you can handle both scenarios dynamically:</p>
+<p><div class="highlight"><pre><span></span><code><span class="c1"># Check if CUDA is available, use GPU if possible</span>
 <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
+</code></pre></div>
+Converting data to a PyTorch tensor enables efficient computation, especially on GPUs, and ensures compatibility with the neural network. Scaling the data standardizes pixel values for better model performance.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Convert the data array to NumPy and scale</span>
+<span class="n">original_s2_numpy</span> <span class="o">=</span> <span class="p">(</span><span class="n">da</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">/</span> <span class="mi">10_000</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
 
 <span class="c1"># Create the tensor and move it to the appropriate device (CPU or GPU)</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">original_s2_numpy</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-
-<span class="c1"># Set up the model to enhance the spatial resolution</span>
+</code></pre></div>
+<h4 id="default-model-setup"><strong>Default model setup</strong></h4>
+<p>The default model is pre-trained for 2.5m resolution but supports 5m and 10m resolutions via the <code>resolution</code> parameter. It uses lightweight CNN architectures for super-resolution and fusion (<code>sr_model_snippet</code>, <code>fusionx2_model_snippet</code>, <code>fusionx4_model_snippet</code>). Models run on CPU or GPU, configurable via <code>device</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># Set up the model to enhance the spatial resolution</span>
 <span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
 
 <span class="c1"># Apply spatial resolution enhancement</span>
 <span class="n">superX</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">models</span><span class="o">=</span><span class="n">models</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="s2">&quot;2.5m&quot;</span><span class="p">)</span>
-
-<span class="c1"># Visualize the results</span>
-<span class="c1"># Plot the original and enhanced-resolution images</span>
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
+</code></pre></div>
+<h4 id="plot-explanation"><strong>Plot explanation</strong></h4>
+<p>The first plot shows the original Sentinel-2 RGB image (10m resolution). The second plot displays the enhanced version with finer spatial details (2.5m resolution) using a lightweight CNN.</p>
+<div class="highlight"><pre><span></span><code><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">X</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Original S2&quot;</span><span class="p">)</span>
 <span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">superX</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">permute</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
