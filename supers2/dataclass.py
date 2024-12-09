@@ -100,3 +100,22 @@ def download_weights(model_snippet: pathlib.Path) -> pathlib.Path:
         raise FileNotFoundError(f"Error downloading file from {url}: {e}")
 
     return model_snippet
+
+
+# def download_weights(
+#         total_size_in_bytes, filename_tmp, model_snippet, r_link):
+ 
+#     OFFICIAL_URL = "https://github.com/IPL-UV/supers2/releases/download/v0.1.0/"
+#     url = OFFICIAL_URL + model_snippet.name
+
+#     # Download the file directly
+#     try:
+#         with tqdm(total=total_size_in_bytes, unit='iB', unit_scale=True) as progress_bar:
+#             with open(filename_tmp, 'wb') as f:
+#                 for chunk in r_link.iter_content(chunk_size=8192):
+#                         progress_bar.update(len(chunk))
+#                         f.write(chunk)
+#     except requests.exceptions.RequestException as e:
+#         raise FileNotFoundError(f"Error downloading file from {url}: {e}")
+
+#     return model_snippet
