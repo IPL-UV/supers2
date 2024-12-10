@@ -4,12 +4,14 @@ import numpy as np
 import torch
 from torch import nn
 
-from supers2.models.opensr_diffusion.autoencoder.utils import (Downsample,
-                                                               Normalize,
-                                                               ResnetBlock,
-                                                               Upsample,
-                                                               make_attn,
-                                                               nonlinearity)
+from supers2.models.opensr_diffusion.autoencoder.utils import (
+    Downsample,
+    Normalize,
+    ResnetBlock,
+    Upsample,
+    make_attn,
+    nonlinearity,
+)
 
 
 class Encoder(nn.Module):

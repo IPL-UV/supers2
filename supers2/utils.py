@@ -65,8 +65,8 @@ def fix_lastchunk(iterchunks, s2dim, chunk_size):
 
 def gdal_create(
     outfilename: str,
-    dtype: str = 'uint16',
-    driver: str = 'GTiff',
+    dtype: str = "uint16",
+    driver: str = "GTiff",
     count: int = 13,
     width: int = 5120,
     height: int = 5120,
@@ -95,20 +95,20 @@ def gdal_create(
     """
     # Define the metadata for the new file
     meta = {
-        'driver': driver,
-        'dtype': dtype,
-        'nodata': nodata,
-        'width': width,
-        'height': height,
-        'count': count,
-        'crs': CRS.from_epsg(crs),
-        'transform': rasterio.transform.from_origin(*affine),
+        "driver": driver,
+        "dtype": dtype,
+        "nodata": nodata,
+        "width": width,
+        "height": height,
+        "count": count,
+        "crs": CRS.from_epsg(crs),
+        "transform": rasterio.transform.from_origin(*affine),
     }
 
     # Merge the metadata with the additional kwargs
     meta.update(kwargs)
 
-    with rasterio.open(outfilename, 'w', **meta) as dst:
+    with rasterio.open(outfilename, "w", **meta) as dst:
         pass
 
     return pathlib.Path(outfilename)

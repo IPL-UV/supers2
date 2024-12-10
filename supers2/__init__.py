@@ -3,4 +3,3 @@ from supers2.xai.lam import lam
 from supers2.trained_models import SRmodels
 
 models = list(SRmodels.model_dump()["object"].keys())
-

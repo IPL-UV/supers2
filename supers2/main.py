@@ -11,6 +11,7 @@ from supers2.setup import load_model
 from supers2.utils import define_iteration, gdal_create
 from supers2.trained_models import SRmodels
 
+
 def setmodel(
     resolution: Literal["2.5m", "5m", "10m"] = "2.5m",
     sr_model_snippet: str = "sr__opensrbaseline__cnn__lightweight__l1",
@@ -277,12 +278,12 @@ def predict_large(
         metadata["transform"].f,
     )
     output_metadata["blockxsize"] = 128 * res_n
-    output_metadata["blockysize"] = 128 * res_n    
-    
+    output_metadata["blockysize"] = 128 * res_n
+
     # Create the output image
     with rio.open(output_fullname, "w", **output_metadata) as dst:
         pass
-    
+
     # Check if the models are loaded
     if models is None:
         models = setmodel(resolution=resolution, device=device)
@@ -290,18 +291,20 @@ def predict_large(
     # Iterate over the image
     with rio.open(output_fullname, "r+") as dst:
         with rio.open(image_fullname) as src:
-            for index, point in enumerate(tqdm.tqdm(nruns)):                
+            for index, point in enumerate(tqdm.tqdm(nruns)):
                 # Read a block of the image
                 window = rio.windows.Window(point[1], point[0], 128, 128)
                 X = torch.from_numpy(src.read(window=window)).float().to(device)
-                
+
                 # Predict the super-resolution
-                result = predict(X=X / 10_000, models=models, resolution=resolution) * 10_000
+                result = (
+                    predict(X=X / 10_000, models=models, resolution=resolution) * 10_000
+                )
                 result[result < 0] = 0
                 result = result.cpu().numpy().astype(np.uint16)
-            
+
                 # Define the offset in the output space
-                # If the point is at the border, the offset is 0 
+                # If the point is at the border, the offset is 0
                 # otherwise consider the overlap
                 if point[1] == 0:
                     offset_x = 0
@@ -312,7 +315,7 @@ def predict_large(
                     offset_y = 0
                 else:
                     offset_y = point[0] * res_n + overlap * res_n // 2
-    
+
                 # Define the length of the patch
                 # The patch is always 224x224
                 # There is three conditions:
@@ -325,11 +328,11 @@ def predict_large(
                     result = result[:, :, :length_x]
                 elif (offset_x + 128) == metadata["width"]:
                     length_x = 128 * res_n
-                    result = result[:, :, :length_x]                
+                    result = result[:, :, :length_x]
                 else:
                     skip = overlap * res_n // 2
                     length_x = 128 * res_n - skip
-                    result = result[:, :, skip:(128 * res_n)]
+                    result = result[:, :, skip : (128 * res_n)]
 
                 # Do the same for the Y axis
                 if offset_y == 0:
@@ -338,12 +341,12 @@ def predict_large(
                     result = result[:, :length_y, :]
                 elif (offset_y + 128) == metadata["height"]:
                     length_y = 128 * res_n
-                    result = result[:, :length_y, :]                
+                    result = result[:, :length_y, :]
                 else:
                     skip = overlap * res_n // 2
                     length_y = 128 * res_n - overlap * res_n // 2
-                    result = result[:, skip:(128 * res_n), :]
-                    
+                    result = result[:, skip : (128 * res_n), :]
+
                 # Write the result in the output image
                 window = rio.windows.Window(offset_x, offset_y, length_x, length_y)
                 dst.write(result, window=window)
@@ -373,13 +376,10 @@ def predict_rgbnir(
 
     # Check if the models are loaded
     model = load_model(
-        snippet=sr_model_snippet,
-        weights_path=weights_path,
-        device=device,
-        **kwargs
+        snippet=sr_model_snippet, weights_path=weights_path, device=device, **kwargs
     )
     model = model.to(device)
-    
+
     # Run the super-resolution
     result = model(X[None]).squeeze(0)
 
@@ -387,7 +387,7 @@ def predict_rgbnir(
         result = torch.nn.functional.interpolate(
             result[None], scale_factor=0.5, mode="bilinear", antialias=True
         ).squeeze(0)
-    
+
     return result
 
 
@@ -396,14 +396,14 @@ def uncertainty(
     models: str = "all",
     weights_path: str = None,
     device: str = "cpu",
-    **kwargs
+    **kwargs,
 ) -> Tuple[torch.Tensor, torch.Tensor]:
     """Generate the mean and standard deviation of the super-resolution models
 
     Args:
         X (torch.Tensor): The input tensor with the S2 bands (RGBNIR)
         models (str, optional): The models to use. Defaults to "all".
-        weights_path (str, optional): The path to the weights. Defaults 
+        weights_path (str, optional): The path to the weights. Defaults
             to None.
         device (str, optional): The device to use. Defaults to "cpu".
 
@@ -418,16 +418,13 @@ def uncertainty(
     for model in tqdm.tqdm(models):
         # Load a model
         model_object = load_model(
-            snippet=model,
-            weights_path=weights_path,
-            device=device,
-            **kwargs
+            snippet=model, weights_path=weights_path, device=device, **kwargs
         )
 
         # Run the model
         X_torch = X.float().to(device)
         prediction = model_object(X_torch[None]).squeeze().cpu()
-        
+
         # Store the prediction
         container.append(prediction)
 

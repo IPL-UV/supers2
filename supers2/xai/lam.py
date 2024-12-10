@@ -86,7 +86,8 @@ def attr_grad(
     else:
         raise ValueError(f"Invalid reduction type: {reduce}. Use 'sum' or 'mean'.")
 
-def down_up(X: torch.Tensor, scale_factor: float=0.5) -> torch.Tensor:
+
+def down_up(X: torch.Tensor, scale_factor: float = 0.5) -> torch.Tensor:
     """Downsample and upsample an image using bilinear interpolation.
 
     Args:
@@ -99,15 +100,13 @@ def down_up(X: torch.Tensor, scale_factor: float=0.5) -> torch.Tensor:
     shape_init = X.shape
     return torch.nn.functional.interpolate(
         input=torch.nn.functional.interpolate(
-            input=X,
-            scale_factor=1/scale_factor,
-            mode="bilinear",
-            antialias=True
+            input=X, scale_factor=1 / scale_factor, mode="bilinear", antialias=True
         ),
         size=shape_init[2:],
         mode="bilinear",
-        antialias=True
+        antialias=True,
     )
+
 
 def create_blur_cube(X: torch.Tensor, scales: list) -> torch.Tensor:
     """Create a cube of blurred images at different scales.
@@ -124,8 +123,7 @@ def create_blur_cube(X: torch.Tensor, scales: list) -> torch.Tensor:
 
 
 def create_lam_inputs(
-    X: torch.Tensor,
-    scales: list
+    X: torch.Tensor, scales: list
 ) -> Tuple[torch.Tensor, torch.Tensor, list]:
     """Create the inputs for the Local Attribution Map (LAM).
 
@@ -135,7 +133,7 @@ def create_lam_inputs(
 
     Returns:
         Tuple[torch.Tensor, torch.Tensor, list]: The cube of blurred
-            images, the difference between the input and the cube, 
+            images, the difference between the input and the cube,
             and the scales.
     """
     cube = create_blur_cube(X, scales)
@@ -144,15 +142,15 @@ def create_lam_inputs(
 
 
 def lam(
-    X: torch.Tensor,    
+    X: torch.Tensor,
     model: torch.nn.Module,
     model_scale: float = 4,
     h: int = 240,
     w: int = 240,
     window: int = 32,
-    scales: list = ["1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x"]
+    scales: list = ["1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x"],
 ) -> Tuple[np.ndarray, float, float, np.ndarray]:
-    """ Estimate the Local Attribution Map (LAM)
+    """Estimate the Local Attribution Map (LAM)
 
     Args:
         X (torch.Tensor): The input tensor (Bands x Height x Width).
@@ -161,7 +159,7 @@ def lam(
         h (int, optional): The height of the window to evaluate. Defaults to 240.
         w (int, optional): The width of the window to evaluate. Defaults to 240.
         window (int, optional): The window size. Defaults to 32.
-        scales (list, optional): The scales to evaluate. Defaults to 
+        scales (list, optional): The scales to evaluate. Defaults to
             ["1x", "2x", "3x", "4x", "5x", "6x", "7x", "8x"].
 
     Returns:
@@ -179,7 +177,7 @@ def lam(
 
     # Compute gradient for each interpolated image
     for i in tqdm(range(cube.shape[0]), desc="Computing gradients"):
-        
+
         # Convert interpolated image to tensor and set requires_grad for backpropagation
         img_tensor = cube[i].float()[None]
         img_tensor.requires_grad_(True)
@@ -194,9 +192,7 @@ def lam(
         grad = np.nan_to_num(grad)  # Replace NaNs with 0
 
         # Accumulate gradients adjusted by lambda derivatives
-        grad_accumulate_list[i] = (
-            grad * diff[i].cpu().numpy()
-        )
+        grad_accumulate_list[i] = grad * diff[i].cpu().numpy()
 
     # Sum the accumulated gradients across all bands
     lam_results = torch.sum(torch.from_numpy(np.abs(grad_accumulate_list)), dim=0)
@@ -208,11 +204,11 @@ def lam(
     gini_index = gini(grad_norm.flatten())
 
     ## window to image size
-    #ratio_img_to_window = (X.shape[1] * model_scale) // window
+    # ratio_img_to_window = (X.shape[1] * model_scale) // window
 
     # KDE estimation
     kde_map = vis_saliency_kde(grad_norm, scale=model_scale, bandwidth=1.0)
-    complexity_metric = (1 - gini_index) * 100 # / ratio_img_to_window
+    complexity_metric = (1 - gini_index) * 100  # / ratio_img_to_window
 
     # Estimate blurriness sensitivity
     robustness_vector = np.abs(grad_accumulate_list).mean(axis=(1, 2, 3))

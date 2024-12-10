@@ -190,6 +190,10 @@ SRmodels = AvailableModels(
             parameters={"upscale": 4},
             srclass="supers2.models.opensr_diffusion.main.SRmodel",
         ),
+        "sr__opensrdiffusion__large__l1_v2": AvailableModel(
+            parameters={"upscale": 4},
+            srclass="supers2.models.opensr_diffusion.main.SRmodel",
+        ),
         # Zero-parameter Models
         "sr__simple__bilinear": AvailableModel(
             parameters={"upscale": 4},
@@ -198,7 +202,7 @@ SRmodels = AvailableModels(
         "sr__simple__bicubic": AvailableModel(
             parameters={"upscale": 4},
             srclass="supers2.models.simple.BicubicSR",
-        )
+        ),
     }
 )
 
