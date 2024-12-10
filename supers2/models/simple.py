@@ -30,10 +30,10 @@ class BilinearSR(torch.nn.Module):
             mode="bilinear",
             antialias=True,
         )
-    
+
 
 class BicubicSR(torch.nn.Module):
-    """   A simple super-resolution model that uses bicubic interpolation.
+    """A simple super-resolution model that uses bicubic interpolation.
 
     Attributes:
         scale_factor (int): The upscaling factor.
