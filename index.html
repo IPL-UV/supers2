@@ -432,63 +432,8 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#default-model-setup" class="md-nav__link">
-    Default model setup
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#configuring-model" class="md-nav__link">
-    Configuring Model
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#available-models" class="md-nav__link">
-    Available Models:
-  </a>
-  
-    <nav class="md-nav" aria-label="Available Models:">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#1-cnn-models" class="md-nav__link">
-    1. CNN Models
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#2-swin-models" class="md-nav__link">
-    2. SWIN Models
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#3-mamba-models" class="md-nav__link">
-    3. MAMBA Models
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#4-diffusion-model" class="md-nav__link">
-    4. Diffusion Model
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#5-simple-models-bilinear-and-bicubic" class="md-nav__link">
-    5. Simple Models (Bilinear and Bicubic)
+  <a href="#download-and-load-the-model" class="md-nav__link">
+    Download and Load the model
   </a>
   
 </li>
@@ -503,14 +448,7 @@
     Predict only RGBNIR bands
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#estimate-the-uncertainty-of-the-model" class="md-nav__link">
-    Estimate the uncertainty of the model 📊
-  </a>
-  
-    <nav class="md-nav" aria-label="Estimate the uncertainty of the model 📊">
+    <nav class="md-nav" aria-label="Predict only RGBNIR bands">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -571,8 +509,8 @@
 </p>
 
 <hr />
-<p><strong>GitHub</strong>: <a href="https://github.com/IPL-UV/supers2">https://github.com/IPL-UV/supers2</a> 🌐</p>
-<p><strong>PyPI</strong>: <a href="https://pypi.org/project/supers2/">https://pypi.org/project/supers2/</a> 🛠️</p>
+<p><strong>GitHub</strong>: <a href="https://github.com/IPL-UV/supers2">https://github.com/IPL-UV/supers2</a> 🌐
+<strong>PyPI</strong>: <a href="https://pypi.org/project/supers2/">https://pypi.org/project/supers2/</a> 🛠️</p>
 <hr />
 <h2 id="table-of-contents"><strong>Table of Contents</strong></h2>
 <ul>
@@ -609,12 +547,12 @@
 </code></pre></div>
 <h2 id="how-to-use"><strong>How to use</strong> 🛠️</h2>
 <h3 id="load-libraries"><strong>Load libraries</strong></h3>
-<div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="k">as</span> <span class="nn">plt</span>
-<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
-<span class="kn">import</span> <span class="nn">torch</span>
-<span class="kn">import</span> <span class="nn">cubo</span>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">cubo</span>
 
-<span class="kn">import</span> <span class="nn">supers2</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">supers2</span>
 </code></pre></div>
 <h3 id="download-sentinel-2-l2a-cube"><strong>Download Sentinel-2 L2A cube</strong></h3>
 <div class="highlight"><pre><span></span><code><span class="c1"># Create a Sentinel-2 L2A data cube for a specific location and date range</span>
@@ -638,23 +576,31 @@
 <li><strong>CPU:</strong> If no GPU is available, PyTorch defaults to the CPU; omit <code>.cuda()</code>.</li>
 </ul>
 <p>Here’s how you can handle both scenarios dynamically:</p>
-<p><div class="highlight"><pre><span></span><code><span class="c1"># Check if CUDA is available, use GPU if possible</span>
+<div class="highlight"><pre><span></span><code><span class="c1"># Check if CUDA is available, use GPU if possible</span>
 <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s2">&quot;cuda&quot;</span> <span class="k">if</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">is_available</span><span class="p">()</span> <span class="k">else</span> <span class="s2">&quot;cpu&quot;</span><span class="p">)</span>
 </code></pre></div>
-Converting data to a PyTorch tensor ensures efficient computation and compatibility, while scaling standardizes pixel values to improve performance.</p>
+<p>Converting data to a PyTorch tensor ensures efficient computation and compatibility, while scaling standardizes pixel values to improve performance.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># Convert the data array to NumPy and scale</span>
 <span class="n">original_s2_numpy</span> <span class="o">=</span> <span class="p">(</span><span class="n">da</span><span class="p">[</span><span class="mi">11</span><span class="p">]</span><span class="o">.</span><span class="n">compute</span><span class="p">()</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span> <span class="o">/</span> <span class="mi">10_000</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
 
 <span class="c1"># Create the tensor and move it to the appropriate device (CPU or GPU)</span>
 <span class="n">X</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">original_s2_numpy</span><span class="p">)</span><span class="o">.</span><span class="n">float</span><span class="p">()</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 </code></pre></div>
-<h3 id="default-model-setup"><strong>Default model setup</strong></h3>
-<p>The default model is pre-trained for 2.5m resolution but supports 5m and 10m resolutions via the <code>resolution</code> parameter. It uses lightweight CNN architectures for super-resolution and fusion (<code>sr_model_snippet</code>, <code>fusionx2_model_snippet</code>, <code>fusionx4_model_snippet</code>). Models run on CPU or GPU, configurable via <code>device</code>. For more details on the architectures, refer to the <a href="#available-models">section</a>.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Set up the model</span>
-<span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+<h3 id="download-and-load-the-model"><strong>Download and Load the model</strong></h3>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">mlstac</span>
+
+<span class="c1"># Download the model</span>
+<span class="n">mlstac</span><span class="o">.</span><span class="n">download</span><span class="p">(</span>
+  <span class="n">file</span><span class="o">=</span><span class="s2">&quot;https://huggingface.co/tacofoundation/supers2/resolve/main/simple_model/mlm.json&quot;</span><span class="p">,</span>
+  <span class="n">output_dir</span><span class="o">=</span><span class="s2">&quot;models2/CNN_Light_SR&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Load the model</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">mlstac</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;models/supers2_simple_model&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">compiled_model</span><span class="p">()</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
 
 <span class="c1"># Apply model</span>
-<span class="n">superX</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">models</span><span class="o">=</span><span class="n">models</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="s2">&quot;2.5m&quot;</span><span class="p">)</span>
+<span class="n">superX</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 <p>The first plot shows the original Sentinel-2 RGB image (10m resolution). The second plot displays the enhanced version with finer spatial details (2.5m resolution) using a lightweight CNN.</p>
 <div class="highlight"><pre><span></span><code><span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
@@ -668,135 +614,9 @@ Converting data to a PyTorch tensor ensures efficient computation and compatibil
   <img src="assets/images/first_plot.png" width="100%">
 </p>
 
-<h3 id="configuring-model"><strong>Configuring Model</strong></h3>
-<p>In <strong>supers2</strong>, you can choose from several types of models to enhance the spatial resolution of Sentinel-2 images. Below are the configurations for each model type and their respective <a href="https://github.com/IPL-UV/supers2/releases/tag/v0.1.0">size options</a>. Each model is configured using <code>supers2.setmodel</code>, where the <code>sr_model_snippet</code> argument defines the super-resolution model, and <code>fusionx2_model_snippet</code> and <code>fusionx4_model_snippet</code> correspond to additional fusion models.</p>
-<h2 id="available-models"><strong>Available Models:</strong></h2>
-<h3 id="1-cnn-models"><strong>1. CNN Models</strong></h3>
-<p>CNN-based models are available in the following sizes: <code>lightweight</code>, <code>small</code>, <code>medium</code>, <code>expanded</code>, and <code>large</code>.</p>
-<p><div class="highlight"><pre><span></span><code><span class="c1"># Example configuration for a CNN model</span>
-<span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span>
-    <span class="n">sr_model_snippet</span><span class="o">=</span><span class="s2">&quot;sr__opensrbaseline__cnn__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">fusionx2_model_snippet</span><span class="o">=</span><span class="s2">&quot;fusionx2__opensrbaseline__cnn__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">fusionx4_model_snippet</span><span class="o">=</span><span class="s2">&quot;fusionx4__opensrbaseline__cnn__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">resolution</span><span class="o">=</span><span class="s2">&quot;2.5m&quot;</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="n">device</span>
-<span class="p">)</span>
-
-<span class="c1"># Apply spatial resolution enhancement</span>
-<span class="n">superX</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">models</span><span class="o">=</span><span class="n">models</span><span class="p">,</span> <span class="n">resolution</span><span class="o">=</span><span class="s2">&quot;2.5m&quot;</span><span class="p">)</span>
-</code></pre></div>
-Model size options (replace <code>small</code> with the desired size):</p>
-<ul>
-<li><code>lightweight</code></li>
-<li><code>small</code></li>
-<li><code>medium</code></li>
-<li><code>expanded</code></li>
-<li><code>large</code></li>
-</ul>
-<p align="center">
-  <img src="assets/images/cnns_plot.png" width="100%">
-</p>
-
-<h3 id="2-swin-models"><strong>2. SWIN Models</strong></h3>
-<p>SWIN models are optimized for varying levels of detail and offer size options: <code>lightweight</code>, <code>small</code>, <code>medium</code>, and <code>expanded</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Example configuration for a SWIN model</span>
-<span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span>
-    <span class="n">sr_model_snippet</span><span class="o">=</span><span class="s2">&quot;sr__opensrbaseline__swin__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">fusionx2_model_snippet</span><span class="o">=</span><span class="s2">&quot;fusionx2__opensrbaseline__cnn__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">fusionx4_model_snippet</span><span class="o">=</span><span class="s2">&quot;fusionx4__opensrbaseline__cnn__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">resolution</span><span class="o">=</span><span class="s2">&quot;2.5m&quot;</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="n">device</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Available sizes:</p>
-<ul>
-<li><code>lightweight</code></li>
-<li><code>small</code></li>
-<li><code>medium</code></li>
-<li><code>expanded</code></li>
-</ul>
-<p align="center">
-  <img src="assets/images/swins_plot.png" width="100%">
-</p>
-
-<h3 id="3-mamba-models"><strong>3. MAMBA Models</strong></h3>
-<p>MAMBA models also come in various sizes, similar to SWIN and CNN: <code>lightweight</code>, <code>small</code>, <code>medium</code>, and <code>expanded</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Example configuration for a MAMBA model</span>
-<span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span>
-    <span class="n">sr_model_snippet</span><span class="o">=</span><span class="s2">&quot;sr__opensrbaseline__mamba__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">fusionx2_model_snippet</span><span class="o">=</span><span class="s2">&quot;fusionx2__opensrbaseline__cnn__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">fusionx4_model_snippet</span><span class="o">=</span><span class="s2">&quot;fusionx4__opensrbaseline__cnn__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">resolution</span><span class="o">=</span><span class="s2">&quot;2.5m&quot;</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="n">device</span>
-<span class="p">)</span>
-</code></pre></div>
-<p>Available sizes:</p>
-<ul>
-<li><code>lightweight</code></li>
-<li><code>small</code></li>
-<li><code>medium</code></li>
-<li><code>expanded</code></li>
-</ul>
-<p align="center">
-  <img src="assets/images/mambas_plot.png" width="100%">
-</p>
-
-<h3 id="4-diffusion-model"><strong>4. Diffusion Model</strong></h3>
-<p>The opensrdiffusion model is only available in the <code>large</code> size. This model is suited for deep resolution enhancement without additional configurations.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># Configuration for the Diffusion model</span>
-<span class="n">models</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">setmodel</span><span class="p">(</span>
-    <span class="n">sr_model_snippet</span><span class="o">=</span><span class="s2">&quot;sr__opensrdiffusion__large__l1&quot;</span><span class="p">,</span>
-    <span class="n">fusionx2_model_snippet</span><span class="o">=</span><span class="s2">&quot;fusionx2__opensrbaseline__cnn__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">fusionx4_model_snippet</span><span class="o">=</span><span class="s2">&quot;fusionx4__opensrbaseline__cnn__lightweight__l1&quot;</span><span class="p">,</span>
-    <span class="n">resolution</span><span class="o">=</span><span class="s2">&quot;2.5m&quot;</span><span class="p">,</span>
-    <span class="n">device</span><span class="o">=</span><span class="n">device</span>
-<span class="p">)</span>
-</code></pre></div>
-<h3 id="5-simple-models-bilinear-and-bicubic"><strong>5. Simple Models (Bilinear and Bicubic)</strong></h3>
-<p>For fast interpolation, bilinear and bicubic interpolation models can be used. These models do not require complex configurations and are useful for quick evaluations of enhanced resolution.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">supers2.models.simple</span> <span class="kn">import</span> <span class="n">BilinearSR</span><span class="p">,</span> <span class="n">BicubicSR</span>
-
-<span class="c1"># Bilinear Interpolation Model</span>
-<span class="n">bilinear_model</span> <span class="o">=</span> <span class="n">BilinearSR</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-<span class="n">super_bilinear</span> <span class="o">=</span> <span class="n">bilinear_model</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-
-<span class="c1"># Bicubic Interpolation Model</span>
-<span class="n">bicubic_model</span> <span class="o">=</span> <span class="n">BicubicSR</span><span class="p">(</span><span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">scale_factor</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
-<span class="n">super_bicubic</span> <span class="o">=</span> <span class="n">bicubic_model</span><span class="p">(</span><span class="n">X</span><span class="p">[</span><span class="kc">None</span><span class="p">])</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
-</code></pre></div>
-<p align="center">
-  <img src="assets/images/bibi.png" width="100%">
-</p>
-
 <h2 id="predict-only-rgbnir-bands"><strong>Predict only RGBNIR bands</strong></h2>
 <div class="highlight"><pre><span></span><code><span class="n">superX</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">predict_rgbnir</span><span class="p">(</span><span class="n">X</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">]])</span>
 </code></pre></div>
-<h2 id="estimate-the-uncertainty-of-the-model"><strong>Estimate the uncertainty of the model</strong> 📊</h2>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">supers2.trained_models</span> <span class="kn">import</span> <span class="n">SRmodels</span>
-
-<span class="c1"># Get the available models</span>
-<span class="n">models</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">SRmodels</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()[</span><span class="s2">&quot;object&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-
-<span class="c1"># Get only swin transformer models</span>
-<span class="n">swin2sr_models</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span> <span class="k">for</span> <span class="n">model</span> <span class="ow">in</span> <span class="n">models</span> <span class="k">if</span> <span class="s2">&quot;swin&quot;</span> <span class="ow">in</span> <span class="n">model</span><span class="p">]</span>
-
-<span class="n">map_mean</span><span class="p">,</span> <span class="n">map_std</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span>
-    <span class="n">X</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">]],</span>
-    <span class="n">models</span><span class="o">=</span><span class="n">swin2sr_models</span>
-<span class="p">)</span>
-
-<span class="c1"># Visualize the uncertainty</span>
-<span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">))</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">mean_map</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">3</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Mean&quot;</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">imshow</span><span class="p">(</span><span class="n">std_map</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span><span class="o">.</span><span class="n">transpose</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span><span class="o">*</span><span class="mi">100</span><span class="p">)</span>
-<span class="n">ax</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">set_title</span><span class="p">(</span><span class="s2">&quot;Standard Deviation&quot;</span><span class="p">)</span>
-<span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-</code></pre></div>
-<p align="center">
-  <img src="assets/images/mean.png" width="100%">
-</p>
-
 <h3 id="estimate-the-local-attention-map-of-the-model">Estimate the Local Attention Map of the model 📊</h3>
 <div class="highlight"><pre><span></span><code><span class="n">kde_map</span><span class="p">,</span> <span class="n">complexity_metric</span><span class="p">,</span> <span class="n">robustness_metric</span><span class="p">,</span> <span class="n">robustness_vector</span> <span class="o">=</span> <span class="n">supers2</span><span class="o">.</span><span class="n">lam</span><span class="p">(</span>
     <span class="n">X</span><span class="o">=</span><span class="n">X</span><span class="p">[[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">]]</span><span class="o">.</span><span class="n">cpu</span><span class="p">(),</span> <span class="c1"># The input tensor</span>
