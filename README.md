@@ -31,7 +31,6 @@
 ---
 
 **GitHub**: [https://github.com/IPL-UV/supers2](https://github.com/IPL-UV/supers2) 🌐
-
 **PyPI**: [https://pypi.org/project/supers2/](https://pypi.org/project/supers2/) 🛠️
 
 ---
@@ -120,6 +119,7 @@ Here’s how you can handle both scenarios dynamically:
 # Check if CUDA is available, use GPU if possible
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 ```
+
 Converting data to a PyTorch tensor ensures efficient computation and compatibility, while scaling standardizes pixel values to improve performance.
 
 ```python
@@ -129,16 +129,24 @@ original_s2_numpy = (da[11].compute().to_numpy() / 10_000).astype("float32")
 # Create the tensor and move it to the appropriate device (CPU or GPU)
 X = torch.from_numpy(original_s2_numpy).float().to(device)
 ```
-### **Default model setup**
 
-The default model is pre-trained for 2.5m resolution but supports 5m and 10m resolutions via the `resolution` parameter. It uses lightweight CNN architectures for super-resolution and fusion (`sr_model_snippet`, `fusionx2_model_snippet`, `fusionx4_model_snippet`). Models run on CPU or GPU, configurable via `device`. For more details on the architectures, refer to the [section](#available-models).
+### **Download and Load the model**
 
 ```python
-# Set up the model
-models = supers2.setmodel(device=device)
+import mlstac
+
+# Download the model
+mlstac.download(
+  file="https://huggingface.co/tacofoundation/supers2/resolve/main/simple_model/mlm.json",
+  output_dir="models2/CNN_Light_SR",
+)
+
+# Load the model
+model = mlstac.load("models/supers2_simple_model").compiled_model()
+model = model.to(device)
 
 # Apply model
-superX = supers2.predict(X, models=models, resolution="2.5m")
+superX = model(X[None]).squeeze(0)
 ```
 
 The first plot shows the original Sentinel-2 RGB image (10m resolution). The second plot displays the enhanced version with finer spatial details (2.5m resolution) using a lightweight CNN.
@@ -156,166 +164,12 @@ plt.show()
   <img src="assets/images/first_plot.png" width="100%">
 </p>
 
-### **Configuring Model**
-
-In **supers2**, you can choose from several types of models to enhance the spatial resolution of Sentinel-2 images. Below are the configurations for each model type and their respective [size options](https://github.com/IPL-UV/supers2/releases/tag/v0.1.0). Each model is configured using `supers2.setmodel`, where the `sr_model_snippet` argument defines the super-resolution model, and `fusionx2_model_snippet` and `fusionx4_model_snippet` correspond to additional fusion models.
-
-## **Available Models:**
-
-### **1. CNN Models**
-CNN-based models are available in the following sizes: `lightweight`, `small`, `medium`, `expanded`, and `large`.
-
-```python
-# Example configuration for a CNN model
-models = supers2.setmodel(
-    sr_model_snippet="sr__opensrbaseline__cnn__lightweight__l1",
-    fusionx2_model_snippet="fusionx2__opensrbaseline__cnn__lightweight__l1",
-    fusionx4_model_snippet="fusionx4__opensrbaseline__cnn__lightweight__l1",
-    resolution="2.5m",
-    device=device
-)
-
-# Apply spatial resolution enhancement
-superX = supers2.predict(X, models=models, resolution="2.5m")
-```
-Model size options (replace `small` with the desired size):
-
-- `lightweight`
-- `small`
-- `medium`
-- `expanded`
-- `large`
-
-
-<p align="center">
-  <img src="assets/images/cnns_plot.png" width="100%">
-</p>
-
-
-### **2. SWIN Models**
-SWIN models are optimized for varying levels of detail and offer size options: `lightweight`, `small`, `medium`, and `expanded`.
-
-```python
-# Example configuration for a SWIN model
-models = supers2.setmodel(
-    sr_model_snippet="sr__opensrbaseline__swin__lightweight__l1",
-    fusionx2_model_snippet="fusionx2__opensrbaseline__cnn__lightweight__l1",
-    fusionx4_model_snippet="fusionx4__opensrbaseline__cnn__lightweight__l1",
-    resolution="2.5m",
-    device=device
-)
-```
-
-Available sizes:
-
-- `lightweight`
-- `small`
-- `medium`
-- `expanded`
-
-
-<p align="center">
-  <img src="assets/images/swins_plot.png" width="100%">
-</p>
-
-
-### **3. MAMBA Models**
-MAMBA models also come in various sizes, similar to SWIN and CNN: `lightweight`, `small`, `medium`, and `expanded`.
-
-```python
-# Example configuration for a MAMBA model
-models = supers2.setmodel(
-    sr_model_snippet="sr__opensrbaseline__mamba__lightweight__l1",
-    fusionx2_model_snippet="fusionx2__opensrbaseline__cnn__lightweight__l1",
-    fusionx4_model_snippet="fusionx4__opensrbaseline__cnn__lightweight__l1",
-    resolution="2.5m",
-    device=device
-)
-```
-
-Available sizes:
-
-- `lightweight`
-- `small`
-- `medium`
-- `expanded`
-
-<p align="center">
-  <img src="assets/images/mambas_plot.png" width="100%">
-</p>
-
-
-
-### **4. Diffusion Model**
-The opensrdiffusion model is only available in the `large` size. This model is suited for deep resolution enhancement without additional configurations.
-
-```python
-# Configuration for the Diffusion model
-models = supers2.setmodel(
-    sr_model_snippet="sr__opensrdiffusion__large__l1",
-    fusionx2_model_snippet="fusionx2__opensrbaseline__cnn__lightweight__l1",
-    fusionx4_model_snippet="fusionx4__opensrbaseline__cnn__lightweight__l1",
-    resolution="2.5m",
-    device=device
-)
-```
-
-### **5. Simple Models (Bilinear and Bicubic)**
-For fast interpolation, bilinear and bicubic interpolation models can be used. These models do not require complex configurations and are useful for quick evaluations of enhanced resolution.
-
-
-```python
-from supers2.models.simple import BilinearSR, BicubicSR
-
-# Bilinear Interpolation Model
-bilinear_model = BilinearSR(device=device, scale_factor=4).to(device)
-super_bilinear = bilinear_model(X[None]).squeeze(0)
-
-# Bicubic Interpolation Model
-bicubic_model = BicubicSR(device=device, scale_factor=4).to(device)
-super_bicubic = bicubic_model(X[None]).squeeze(0)
-``` 
-
-<p align="center">
-  <img src="assets/images/bibi.png" width="100%">
-</p>
-
-
 
 ## **Predict only RGBNIR bands**
 
 ```python
 superX = supers2.predict_rgbnir(X[[2, 1, 0, 6]])
 ```
-
-## **Estimate the uncertainty of the model** 📊
-
-```python
-from supers2.trained_models import SRmodels
-
-# Get the available models
-models = list(SRmodels.model_dump()["object"].keys())
-
-# Get only swin transformer models
-swin2sr_models = [model for model in models if "swin" in model]
-
-map_mean, map_std = supers2.uncertainty(
-    X[[2, 1, 0, 6]],
-    models=swin2sr_models
-)
-
-# Visualize the uncertainty
-fig, ax = plt.subplots(1, 2, figsize=(10, 5))
-ax[0].imshow(mean_map[0:3].cpu().numpy().transpose(1, 2, 0)*3)
-ax[0].set_title("Mean")
-ax[1].imshow(std_map[0:3].cpu().numpy().transpose(1, 2, 0)*100)
-ax[1].set_title("Standard Deviation")
-plt.show()
-```
-<p align="center">
-  <img src="assets/images/mean.png" width="100%">
-</p>
-
 
 ### Estimate the Local Attention Map of the model 📊
 

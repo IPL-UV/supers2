@@ -1,3 +1,4 @@
+import torch
 import itertools
 import rasterio
 import pathlib
